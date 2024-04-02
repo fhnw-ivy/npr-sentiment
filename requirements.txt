@@ -13,6 +13,7 @@ langfuse
 rapidfuzz
 arize-phoenix
 arize-phoenix-evals
-
+datasets
+arize
 python-dotenv~=1.0.1
 tqdm~=4.66.2
