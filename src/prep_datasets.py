@@ -27,6 +27,7 @@ def load_hf_dataset():
     dataset = load_dataset(HF_DATASET_NAME)
     train_df = dataset['train'].to_pandas()
     test_df = dataset['test'].to_pandas()
+    logger.info(f"Loaded {len(train_df)} training samples and {len(test_df)} test samples.")
     return train_df, test_df
 
 
@@ -78,9 +79,9 @@ def parse_fractions_string(fractions_str):
 
 @app.command()
 def prepare_dataset(
-        dev_set_fraction: float = typer.Option(0.005,
+        dev_set_fraction: float = typer.Option(1/3600,
                                                help="Fraction of the full dataset to be used as the development set"),
-        val_set_fraction: float = typer.Option(0.005,
+        val_set_fraction: float = typer.Option(1/3600,
                                                help="Fraction of the test dataset to be used as the validation set"),
         labelled_fraction: float = typer.Option(1 / 6, help="Fraction of the development set that should be labelled"),
         fractions: str = typer.Option("1.0,0.75,0.5,0.25",
