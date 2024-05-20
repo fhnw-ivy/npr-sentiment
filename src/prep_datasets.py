@@ -114,7 +114,7 @@ def prepare_dataset(
                  f"Validation set size: {len(val_df)} (fraction: {val_set_fraction})")
 
     nested_subsets = create_hierarchically_nested_subsets(dev_df, fractions)
-    print(nested_subsets.keys())
+
     logger.info(f"Created nested subsets for {fractions} fractions.")
     for frac, df in nested_subsets.items():
         logger.debug(f"Subset size for fraction {frac}: {len(df)}")
