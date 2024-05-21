@@ -39,7 +39,7 @@ class WeakLabelingPipeline:
     def predict(self):
         embeddings = self.transformer.encode(self.data[self.column_to_embed].tolist(), show_progress_bar=True)
 
-        self.data['pred'] = self.model.predict(embeddings)
+        self.data['label'] = self.model.predict(embeddings)
         return self.data
 
     def save_results(self, output_filename):
@@ -49,6 +49,7 @@ class WeakLabelingPipeline:
 
     def run(self, df, output_filename=None):
         self.data = df
+        self.data.rename(columns={'label': 'ground_truth'}, inplace=True)
         self.predict()
         if output_filename:
             self.save_results(output_filename)

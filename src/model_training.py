@@ -46,11 +46,13 @@ def set_seed(seed: int = SEED):
 
 def load_and_prep_datasets(data_dir: str,
                            nested_splits: bool,
-                           use_weak_labels: bool):
+                           weak_label_path: str = None):
     labelled_dev_df, unlabelled_dev_df, validation_set_df = load_datasets(data_dir)
 
-    if use_weak_labels:
-        train_df = pd.concat([labelled_dev_df, unlabelled_dev_df])
+    if weak_label_path:
+        weak_labels_df = pd.read_parquet(weak_label_path)
+        train_df = pd.concat([labelled_dev_df, weak_labels_df])
+        train_df = train_df.sample(frac=1, random_state=SEED).reset_index(drop=True)
     else:
         train_df = labelled_dev_df
 
@@ -163,7 +165,7 @@ def train_pipeline(
         training_mode: str,
 
         nested_splits: bool = False,
-        use_weak_labels: bool = False,
+        weak_label_path: str = None,
         extract_embeddings: bool = False,
         embedding_pool_strat: str = 'mean',
 
@@ -188,9 +190,11 @@ def train_pipeline(
     logger.info(f"Loading and preparing datasets from {DATA_DIR}")
     datasets = load_and_prep_datasets(DATA_DIR,
                                       nested_splits=nested_splits,
-                                      use_weak_labels=use_weak_labels)
+                                      weak_label_path=weak_label_path)
 
     val_ds_tokenized = tokenize_and_prepare_dataset(datasets["validation"], tokenizer)
+
+    use_weak_labels = True if weak_label_path else False
 
     if nested_splits:
         output_root_dir = get_run_output_dir(OUTPUT_ROOT_DIR, training_mode, nested_splits, use_weak_labels)
