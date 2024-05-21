@@ -9,7 +9,7 @@
 To begin training models, execute the following command:
 
 ```bash
-python src/model_training.py "transfer" "./data" --nested-splits
+python src/model_training.py "transfer" --nested-splits
 ```
 
 ### Configuration Options
@@ -19,9 +19,6 @@ You can customize the training process by using various command-line arguments. 
 - **Mode**: 
   - `transfer` – Starts training with transfer learning.
   - `finetune` – Starts fine-tuning the model.
-
-- **Data Directory**: 
-  - `./data` – Sets the path to the training data directory.
 
 - **Nested Splits**: 
   - `--nested-splits` – Enables nested splits for the train set to improve model robustness.
