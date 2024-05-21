@@ -4,16 +4,22 @@ import random
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rootutils
 import torch
 import typer
 import wandb
 from datasets import Dataset
+from dotenv import load_dotenv
 from sklearn.metrics import accuracy_score, f1_score
+from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
+
+load_dotenv()
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
+from src.prep_datasets import create_hierarchically_nested_subsets
 from src.utils import get_torch_device, save_eval_results, get_run_output_dir, setup_logging, load_env
 from src.data_loader import load_datasets
 
@@ -23,8 +29,11 @@ load_env()
 
 logger = logging.getLogger(__name__)
 
-HF_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-SEED = 1337
+HF_MODEL_NAME = os.getenv("HF_CLS_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
+OUTPUT_ROOT_DIR = os.getenv("OUTPUT_DIR", "output")
+DATA_DIR = os.getenv("DATA_DIR", "data")
+SEED = int(os.getenv("SEED", 1337))
+NESTED_SPLIT_RATIOS = [i / 4 for i in range(1, 5)]
 
 
 def set_seed(seed: int = SEED):
@@ -36,21 +45,16 @@ def set_seed(seed: int = SEED):
 
 
 def load_and_prep_datasets(data_dir: str,
-                           include_nested_splits: bool = False,
-                           use_weak_labels: bool = False):
+                           nested_splits: bool,
+                           use_weak_labels: bool):
+    labelled_dev_df, unlabelled_dev_df, validation_set_df = load_datasets(data_dir)
+
     if use_weak_labels:
-        raise NotImplementedError("Weak labels not yet implemented.")
-
-    if include_nested_splits:
-        labelled_dev_df, unlabelled_dev_df, validation_set_df, nested_splits_dict = load_datasets(data_dir, True)
+        train_df = pd.concat([labelled_dev_df, unlabelled_dev_df])
     else:
-        labelled_dev_df, unlabelled_dev_df, validation_set_df = load_datasets(data_dir, False)
+        train_df = labelled_dev_df
 
-    # if use_weak_labels:
-    #    train_ds = Dataset.from_pandas(pd.concat([labelled_dev_df, unlabelled_dev_df]))
-    # else:
-
-    train_ds = Dataset.from_pandas(labelled_dev_df)
+    train_ds = Dataset.from_pandas(train_df)
     val_ds = Dataset.from_pandas(validation_set_df)
 
     datasets = {
@@ -58,12 +62,14 @@ def load_and_prep_datasets(data_dir: str,
         "validation": val_ds
     }
 
-    if include_nested_splits:
-        for key in nested_splits_dict:
-            nested_splits_dict[key] = Dataset.from_pandas(nested_splits_dict[key])
-        datasets["nested_splits"] = nested_splits_dict
-
     logger.info(f"Loaded datasets from {data_dir}: {len(train_ds)} training samples, {len(val_ds)} validation samples")
+
+    if nested_splits:
+        nested_splits_dfs = create_hierarchically_nested_subsets(train_df, NESTED_SPLIT_RATIOS, SEED)
+        nested_splits_dss = {key: Dataset.from_pandas(df) for key, df in nested_splits_dfs.items()}
+        datasets["nested_splits"] = nested_splits_dss
+        logger.info(f"Created nested splits: {list(nested_splits_dss.keys())}")
+
     return datasets
 
 
@@ -82,7 +88,7 @@ def create_tokenizer(model_name: str):
 def create_model(model_name: str, freeze_base: bool):
     model = AutoModelForSequenceClassification.from_pretrained(model_name,
                                                                num_labels=2,
-                                                               output_hidden_states=True).to(get_torch_device())
+                                                               output_hidden_states=False).to(get_torch_device())
     if freeze_base:
         for name, param in model.named_parameters():
             if 'classifier' not in name:
@@ -91,7 +97,9 @@ def create_model(model_name: str, freeze_base: bool):
 
 
 def compute_metrics(pred):
+    # TODO: Fix this function to work with hidden states output
     preds, labels = pred.predictions.argmax(-1), pred.label_ids
+
     accuracy = accuracy_score(labels, preds)
     f1_macro = f1_score(labels, preds, average='macro')
     f1_weighted = f1_score(labels, preds, average='weighted')
@@ -153,8 +161,6 @@ def extract_bert_embeddings(model, dataloader, device, pooling_strategy='mean'):
 @app.command()
 def train_pipeline(
         training_mode: str,
-        data_dir: str,
-        output_root_dir: str = './results',
 
         nested_splits: bool = False,
         use_weak_labels: bool = False,
@@ -179,13 +185,15 @@ def train_pipeline(
     tokenizer = create_tokenizer(HF_MODEL_NAME)
     logger.info(f"Torch device: {get_torch_device()}")
 
-    logger.info(f"Loading and preparing datasets from {data_dir}")
-    datasets = load_and_prep_datasets(data_dir,
-                                      include_nested_splits=nested_splits,
+    logger.info(f"Loading and preparing datasets from {DATA_DIR}")
+    datasets = load_and_prep_datasets(DATA_DIR,
+                                      nested_splits=nested_splits,
                                       use_weak_labels=use_weak_labels)
+
     val_ds_tokenized = tokenize_and_prepare_dataset(datasets["validation"], tokenizer)
-    if "nested_splits" in datasets:
-        output_root_dir = get_run_output_dir(output_root_dir, training_mode, nested_splits, use_weak_labels)
+
+    if nested_splits:
+        output_root_dir = get_run_output_dir(OUTPUT_ROOT_DIR, training_mode, nested_splits, use_weak_labels)
         wandb_group_id = wandb.util.generate_id()
         logger.info(f"Using output directory: {output_root_dir}")
         logger.info(f"Using wandb group ID: {wandb_group_id}")
@@ -220,7 +228,7 @@ def train_pipeline(
         save_eval_results(eval_results_splits, output_root_dir)
         save_training_size_performance_plot(eval_results_splits, output_root_dir)
     else:
-        output_root_dir = get_run_output_dir(output_root_dir, training_mode, nested_splits, use_weak_labels)
+        output_root_dir = get_run_output_dir(OUTPUT_ROOT_DIR, training_mode, nested_splits, use_weak_labels)
         logger.info("Using output directory: {output_dir}")
 
         train_ds_tokenized = tokenize_and_prepare_dataset(datasets["train"], tokenizer)
