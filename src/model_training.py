@@ -80,7 +80,9 @@ def create_tokenizer(model_name: str):
 
 
 def create_model(model_name: str, freeze_base: bool):
-    model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2).to(get_torch_device())
+    model = AutoModelForSequenceClassification.from_pretrained(model_name,
+                                                               num_labels=2,
+                                                               output_hidden_states=True).to(get_torch_device())
     if freeze_base:
         for name, param in model.named_parameters():
             if 'classifier' not in name:
@@ -117,6 +119,37 @@ def save_training_size_performance_plot(data, output_dir):
         plt.close()
 
 
+def extract_bert_embeddings(model, dataloader, device, pooling_strategy='mean'):
+    model.eval()
+    embeddings = []
+    labels = []
+    predicted_labels = []
+
+    if pooling_strategy == 'cls':
+        pooling_op = lambda hidden_states: hidden_states[:, 0, :]
+    elif pooling_strategy == 'mean':
+        pooling_op = lambda hidden_states: hidden_states.mean(axis=1)
+    else:
+        raise ValueError("Invalid pooling strategy")
+
+    with torch.no_grad():
+        for batch in tqdm(dataloader, desc="Extracting embeddings", unit="batch"):
+            inputs = {k: v.to(device) for k, v in batch.items()}
+            outputs = model(**inputs)
+
+            sentence_embeddings = pooling_op(outputs.hidden_states[0])
+            embeddings.append(sentence_embeddings.cpu().numpy())
+
+            predicted_labels.append(outputs.logits.argmax(dim=1).cpu().numpy())
+            labels.append(batch['labels'].cpu().numpy())
+
+    return pd.DataFrame({
+        'content_vector': [embedding.tolist() for embedding in np.concatenate(embeddings, axis=0)],
+        'predicted_labels': np.concatenate(predicted_labels, axis=0),
+        'actual_labels': np.concatenate(labels, axis=0)
+    })
+
+
 @app.command()
 def train_pipeline(
         training_mode: str,
@@ -125,6 +158,8 @@ def train_pipeline(
 
         nested_splits: bool = False,
         use_weak_labels: bool = False,
+        extract_embeddings: bool = False,
+        embedding_pool_strat: str = 'mean',
 
         lr: float = 2e-5,
         num_epochs: int = 10,
@@ -177,7 +212,9 @@ def train_pipeline(
                                        weight_decay,
                                        wandb_group_id,
                                        use_weak_labels,
-                                       training_mode)
+                                       training_mode,
+                                       extract_embeddings,
+                                       embedding_pool_strat)
             eval_results_splits[key] = split_eval_results
 
         save_eval_results(eval_results_splits, output_root_dir)
@@ -187,8 +224,21 @@ def train_pipeline(
         logger.info("Using output directory: {output_dir}")
 
         train_ds_tokenized = tokenize_and_prepare_dataset(datasets["train"], tokenizer)
-        eval_results = train(batch_size, lr, model, num_epochs, output_root_dir, tokenizer, train_ds_tokenized,
-                             val_ds_tokenized, warmup_steps, weight_decay, None, use_weak_labels, training_mode)
+        eval_results = train(batch_size,
+                             lr,
+                             model,
+                             num_epochs,
+                             output_root_dir,
+                             tokenizer,
+                             train_ds_tokenized,
+                             val_ds_tokenized,
+                             warmup_steps,
+                             weight_decay,
+                             None,
+                             use_weak_labels,
+                             training_mode,
+                             extract_embeddings,
+                             embedding_pool_strat)
 
         save_eval_results(eval_results, output_root_dir)
 
@@ -196,7 +246,8 @@ def train_pipeline(
 
 
 def train(batch_size, lr, model, num_epochs, output_dir, tokenizer, train_ds_tokenized,
-          val_ds_tokenized, warmup_steps, weight_decay, group, use_weak_labels, training_mode):
+          val_ds_tokenized, warmup_steps, weight_decay, group, use_weak_labels, training_mode, extract_embeddings,
+          embedding_pool_strat):
     training_args = TrainingArguments(
         output_dir=output_dir,
         num_train_epochs=num_epochs,
@@ -258,6 +309,24 @@ def train(batch_size, lr, model, num_epochs, output_dir, tokenizer, train_ds_tok
     model_path = os.path.join(output_dir, "model")
     os.makedirs(model_path, exist_ok=True)
     model.save_pretrained(model_path)
+
+    if extract_embeddings:
+        logger.info("Extracting embeddings from model")
+        train_dataloader = trainer.get_train_dataloader()
+        val_dataloader = trainer.get_eval_dataloader()
+
+        train_embeddings_df = extract_bert_embeddings(model, train_dataloader, get_torch_device(),
+                                                      pooling_strategy=embedding_pool_strat)
+        val_embeddings_df = extract_bert_embeddings(model, val_dataloader, get_torch_device(),
+                                                    pooling_strategy=embedding_pool_strat)
+
+        logger.debug(f"Train embeddings shape: {train_embeddings_df.shape}")
+        logger.debug(f"Validation embeddings shape: {val_embeddings_df.shape}")
+
+        train_embeddings_df.to_parquet(f"{output_dir}/train_embeddings.parquet")
+        val_embeddings_df.to_parquet(f"{output_dir}/val_embeddings.parquet")
+
+        logger.info("Embeddings saved to disk.")
 
     return eval_results
 
