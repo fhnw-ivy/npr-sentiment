@@ -1,0 +1,32 @@
+name: Quarto Render and Convert
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Quarto
+      uses: quarto-dev/quarto-actions/setup@v2
+
+    - name: Render Quarto project
+      run: quarto render .
+
+    - name: Convert .qmd to .ipynb
+      run: |
+        for file in notebooks/*.qmd; do
+          quarto convert "$file"
+        done
+
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: converted-notebooks
+        path: '*.ipynb'
