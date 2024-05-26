@@ -2,9 +2,18 @@ project:
   output-dir: exports
   render:
     - "*.qmd"
+  type: website
+
+toc: true
+number-sections: true
 
 execute:
   eval: false
 
-toc: true
-number-sections: true
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: right
+    self-contained: true
+    embed-resources: true
