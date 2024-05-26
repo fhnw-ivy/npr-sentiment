@@ -32,8 +32,14 @@ jobs:
           quarto convert "$file"
         done
 
-    - name: Archive artifacts
+    - name: Archive converted notebooks
       uses: actions/upload-artifact@v3
       with:
         name: converted-notebooks
         path: 'notebooks/*.ipynb'
+
+    - name: Archive rendered output
+      uses: actions/upload-artifact@v3
+      with:
+        name: rendered-output
+        path: 'exports'
