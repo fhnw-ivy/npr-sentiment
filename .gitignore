@@ -166,3 +166,5 @@ distilbert/
 wandb/
 
 results/
+
+/.quarto/

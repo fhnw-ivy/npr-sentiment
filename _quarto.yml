@@ -1,0 +1,10 @@
+project:
+  output-dir: exports
+  render:
+    - "*.qmd"
+
+execute:
+  eval: false
+
+toc: true
+number-sections: true

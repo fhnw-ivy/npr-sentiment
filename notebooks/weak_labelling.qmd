@@ -1,0 +1,345 @@
+---
+title: Weak Labeling for Semi-Supervised Learning
+jupyter: python3
+---
+
+This notebook demonstrates how to use weak labeling for semi-supervised learning. We will explore different weak labeling techniques and evaluate their performance.
+
+The weak labeling techniques we will explore are:
+
+1. KNeighbors
+2. Logistic Regression
+3. Random Forest
+4. Neural Network
+5. Support Vector Machine
+
+We will use the `sentence-transformers` library to generate sentence embeddings and the `scikit-learn` library to train the weak labeling models.
+
+The weak labeling models will be trained on the labeled development set and will then be used to predict the labels of the unlabeled development set. We will then evaluate the performance of the weak labeling models on the validation set, which is also labeled.
+
+Finally, we will save the best weak labeling model so that it can be used for the semi-supervised learning phase in the weak labeling pipeline.
+
+## Setup
+
+```{python}
+import os
+import random
+import sys
+
+import numpy as np
+import torch
+from dotenv import load_dotenv
+
+current_dir = os.getcwd()
+parent_dir = os.path.dirname(current_dir)
+
+sys.path.append(parent_dir)
+
+load_dotenv()
+
+DATA_DIR = os.getenv('DATA_DIR', 'data')
+MODELS_DIR = os.getenv('MODELS_DIR', 'models')
+assert DATA_DIR is not None
+assert MODELS_DIR is not None
+
+SEED = 1337
+
+def set_seed():
+    torch.use_deterministic_algorithms(True)
+    
+    random.seed(SEED)
+    np.random.seed(SEED)
+
+    torch.manual_seed(SEED)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(SEED)
+        torch.cuda.manual_seed_all(SEED)
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+set_seed()
+```
+
+As the `sentence-transformers` gives us a `torch` model, we need to check the environment to see if we can use a suitable accelerator.
+
+```{python}
+if torch.backends.mps.is_available():
+    device = torch.device('mps')
+elif torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
+
+print('Device:', device)
+```
+
+## Load Datasets
+
+We will load the labeled development set, the unlabeled development set, and the validation set.
+
+Here a short overview of the datasets:
+- Train Dataset: Labeled development set
+- Validation Dataset: Validation set
+- Test Dataset: Unlabeled development set
+
+The test dataset would not be available in a real-world scenario, but we will use it to get an idea of how well the weak labeling models perform on unseen data and thus make assumptions about the performance later on the downstream task.
+
+```{python}
+from src.data_loader import load_datasets
+
+labelled_dev, unlabelled_dev, val_set = load_datasets(DATA_DIR)
+train_df = labelled_dev
+y_train = train_df['label']
+
+val_df = val_set
+y_val = val_df['label']
+
+test_df = unlabelled_dev
+y_test = test_df['label']
+```
+
+## Sentence Embeddings
+
+We will use the `all-MiniLM-L6-v2` model from the `sentence-transformers` library to generate sentence embeddings for the text data.
+
+The `all-MiniLM-L6-v2` model is a transformer-based model that has been pre-trained on a large corpus of text data and can generate high-quality sentence embeddings. The model strikes a good balance between speed and quality, making it suitable for our weak labeling task. As it is written in the documentation:
+
+> The all-mpnet-base-v2 model provides the best quality, while all-MiniLM-L6-v2 is 5 times faster and still offers good quality.
+
+
+```{python}
+import pickle
+
+EMBEDDINGS_FOLDER = os.path.join(DATA_DIR, 'embeddings')
+os.makedirs(EMBEDDINGS_FOLDER, exist_ok=True)
+
+def load_embeddings(filename):
+    with open(f'{EMBEDDINGS_FOLDER}/{filename}.pkl', 'rb') as f:
+        embeddings = pickle.load(f)
+    return embeddings
+
+if os.path.exists(f'{EMBEDDINGS_FOLDER}/train_embeddings.pkl'):
+    X_train = load_embeddings('train_embeddings')
+    print('Train Embeddings Loaded')
+
+if os.path.exists(f'{EMBEDDINGS_FOLDER}/val_embeddings.pkl'):
+    X_val = load_embeddings('val_embeddings')
+    print('Validation Embeddings Loaded')
+
+if os.path.exists(f'{EMBEDDINGS_FOLDER}/test_embeddings.pkl'):
+    print('Test Embeddings Loaded')
+    X_test = load_embeddings('test_embeddings')
+```
+
+```{python}
+from sentence_transformers import SentenceTransformer
+
+# model = SentenceTransformer('all-MiniLM-L6-v2').to(device)
+model = SentenceTransformer('all-mpnet-base-v2').to(device)
+
+def generate_embeddings(texts):
+    embeddings = model.encode(texts, show_progress_bar=True)
+    return embeddings
+
+if 'X_train' not in locals():
+    X_train = generate_embeddings(train_df['content'].values)
+
+if 'X_val' not in locals():
+    X_val = generate_embeddings(val_df['content'].values)
+
+if 'X_test' not in locals():
+    X_test = generate_embeddings(test_df['content'].values)
+```
+
+```{python}
+print('Train Embeddings Shape:', X_train.shape)
+print('Validation Embeddings Shape:', X_val.shape)
+print('Test Embeddings Shape:', X_test.shape)
+```
+
+We save the embeddings to disk so that we can use them later for the semi-supervised learning phase in the weak labeling pipeline.
+
+```{python}
+def save_embeddings(embeddings, filename):
+    with open(f'{EMBEDDINGS_FOLDER}/{filename}.pkl', 'wb') as f:
+        pickle.dump(embeddings, f)
+
+save_embeddings(X_train, 'train_embeddings')
+save_embeddings(X_val, 'val_embeddings')
+save_embeddings(X_test, 'test_embeddings')
+```
+
+## Evaluation Function
+
+We will use the following function to evaluate the performance of the weak labeling models on the validation and test sets. It will print the classification report and confusion matrix for the predictions made by the weak labeling models.
+
+```{python}
+from matplotlib import pyplot as plt
+from sklearn.metrics import classification_report, confusion_matrix
+import seaborn as sns
+
+def print_evaluation(y_test, y_pred, title):
+    print('--- Classification Report ---')
+    print(classification_report(y_test, y_pred))
+
+    print('--- Confusion Matrix ---')
+    cm = confusion_matrix(y_test, y_pred)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.title(title)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.show()
+```
+
+## Approach 1: KNeighbors Weak Labeling
+
+We will use the KNeighbors classifier from the `scikit-learn` library to train a weak labeling model on the labeled development set. KNneighbors is a simple and effective algorithm for classification tasks, and it can be used for weak labeling as well as the notion of clustering is similar to weak labeling in the sense that we are trying to find the nearest neighbors for a given sentence embedding in the feature space.
+
+As there are many hyperparameters to tune, we will use grid search to find the best hyperparameters for the KNeighbors classifier.
+
+```{python}
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'n_neighbors': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200],
+    'weights': ['uniform', 'distance'],
+    'metric': ['euclidean', 'manhattan', 'minkowski'],
+    'algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],
+    'leaf_size': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+}
+
+grid_search = GridSearchCV(KNeighborsClassifier(),
+                           param_grid,
+                           n_jobs=-1,
+                           cv=5,
+                           verbose=3)
+
+grid_search.fit(X_train, y_train)
+best_knn = grid_search.best_estimator_
+```
+
+```{python}
+
+print_evaluation(y_val, best_knn.predict(X_val), 
+                 'KNeighbors Weak Labeling (Validation Set)')
+
+print_evaluation(y_test, best_knn.predict(X_test), 
+                 'KNeighbors Weak Labeling (Test Set)')
+```
+
+## Approach 2: Logistic Regression
+
+```{python}
+from sklearn.linear_model import LogisticRegression
+
+log_reg_model = LogisticRegression(max_iter=10000)
+log_reg_model.fit(X_train, y_train)
+```
+
+```{python}
+print_evaluation(y_val, log_reg_model.predict(X_val), 
+                 'Logistic Regression (Validation Set)')
+
+print_evaluation(y_test, log_reg_model.predict(X_test), 
+                 'Logistic Regression (Test Set)')
+```
+
+## Approach 3: Random Forest
+
+```{python}
+# from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+
+# rf_model = RandomForestClassifier(n_estimators=1000, random_state=SEED)
+rf_model = GradientBoostingClassifier(n_estimators=1000, random_state=SEED)
+rf_model.fit(X_train, y_train)
+```
+
+```{python}
+print_evaluation(y_val, rf_model.predict(X_val), 
+                 'Random Forest (Validation Set)')
+
+print_evaluation(y_test, rf_model.predict(X_test),
+                 'Random Forest (Test Set)')
+```
+
+## Approach 4: Neural Network
+
+```{python}
+from sklearn.neural_network import MLPClassifier
+
+mlp_model = MLPClassifier(hidden_layer_sizes=(512, 128), max_iter=1000, random_state=SEED)
+mlp_model.fit(X_train, y_train)
+```
+
+```{python}
+print_evaluation(y_val, mlp_model.predict(X_val), 
+                 'Neural Network (Validation Set)')
+
+print_evaluation(y_test, mlp_model.predict(X_test),
+                 'Neural Network (Test Set)')
+```
+
+## Approach 5: Support Vector Machine
+
+```{python}
+from sklearn.svm import SVC
+
+svm_param_grid = {
+    'C': [0.1, 1, 10, 100],
+    'gamma': [1, 0.1, 0.01, 0.001],
+    'kernel': ['rbf', 'linear', 'poly', 'sigmoid']
+}
+
+svm_grid_search = GridSearchCV(SVC(),
+                               svm_param_grid,
+                               n_jobs=-1,
+                               cv=5,
+                               verbose=3)
+
+svm_grid_search.fit(X_train, y_train)
+svm_model = svm_grid_search.best_estimator_
+print(svm_grid_search.best_params_)
+```
+
+```{python}
+print_evaluation(y_val, svm_model.predict(X_val), 
+                 'Support Vector Machine (Validation Set)')
+
+print_evaluation(y_test, svm_model.predict(X_test),
+                    'Support Vector Machine (Test Set)')
+```
+
+## Save Best Models
+
+We will save the best weak labeling models so that they can be used for the semi-supervised learning phase in the weak labeling pipeline.
+
+```{python}
+MODELS_FOLDER = os.getenv('MODELS_DIR', 'models')
+os.makedirs(MODELS_FOLDER, exist_ok=True)
+
+def save_model(model, filename):
+    with open(f'{MODELS_FOLDER}/{filename}.pkl', 'wb') as f:
+        pickle.dump(model, f)
+```
+
+```{python}
+save_model(best_knn, 'knn_weak_labeling')
+save_model(log_reg_model, 'log_reg_weak_labeling')
+save_model(rf_model, 'rf_weak_labeling')
+save_model(mlp_model, 'mlp_weak_labeling')
+save_model(svm_model, 'svm_weak_labeling')
+```
+
+## Visualize Predictions
+
+```{python}
+# from src.px_utils import create_dataset, launch_px
+
+# train_ds = create_dataset("Train Dataset", train_df, X_train.tolist(), y_train)
+# val_ds = create_dataset("Test Dataset", test_df, X_val.tolist(), y_pred)
+
+# launch_px(val_ds, train_ds)
+```
