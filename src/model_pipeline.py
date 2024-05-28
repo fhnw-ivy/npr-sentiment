@@ -53,6 +53,8 @@ def get_default_training_params():
         "logging_strategy": "epoch",
         "logging_first_step": True,
 
+        "evaluation_strategy": "epoch",
+
         "save_strategy": "epoch",
         "metric_for_best_model": "accuracy",
 
@@ -170,6 +172,8 @@ def train_and_eval(model,
         logging_strategy=training_params["logging_strategy"],
         logging_first_step=training_params["logging_first_step"],
         log_level="warning",
+
+        evaluation_strategy=training_params["evaluation_strategy"],
 
         save_strategy=training_params["save_strategy"],
         metric_for_best_model=training_params["metric_for_best_model"],
