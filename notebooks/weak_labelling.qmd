@@ -88,7 +88,8 @@ The test dataset would not be available in a real-world scenario, but we will us
 ```{python}
 from src.data_loader import load_datasets
 
-labelled_dev, unlabelled_dev, val_set = load_datasets(DATA_DIR)
+partitions_dir = os.path.join(DATA_DIR, 'partitions')
+labelled_dev, unlabelled_dev, val_set = load_datasets(partitions_dir)
 train_df = labelled_dev
 y_train = train_df['label']
 
@@ -96,7 +97,7 @@ val_df = val_set
 y_val = val_df['label']
 
 test_df = unlabelled_dev
-y_test = test_df['label']
+y_test = test_df['ground_truth']
 ```
 
 ## Sentence Embeddings
@@ -135,8 +136,9 @@ if os.path.exists(f'{EMBEDDINGS_FOLDER}/test_embeddings.pkl'):
 ```{python}
 from sentence_transformers import SentenceTransformer
 
+transformer_model_name = os.getenv('ST_EMBEDDING_MODEL_NAME')
 # model = SentenceTransformer('all-MiniLM-L6-v2').to(device)
-model = SentenceTransformer('all-mpnet-base-v2').to(device)
+model = SentenceTransformer(transformer_model_name).to(device)
 
 def generate_embeddings(texts):
     embeddings = model.encode(texts, show_progress_bar=True)
@@ -321,7 +323,7 @@ MODELS_FOLDER = os.getenv('MODELS_DIR', 'models')
 os.makedirs(MODELS_FOLDER, exist_ok=True)
 
 def save_model(model, filename):
-    with open(f'{MODELS_FOLDER}/{filename}.pkl', 'wb') as f:
+    with open(f'{MODELS_FOLDER}/weak_labelling/{filename}.pkl', 'wb') as f:
         pickle.dump(model, f)
 ```
 

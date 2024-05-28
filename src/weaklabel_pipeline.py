@@ -1,56 +1,92 @@
-import pandas as pd
-from sentence_transformers import SentenceTransformer
-import joblib
-import os
-from dotenv import load_dotenv
 import logging
+import os
 
-logger = logging.getLogger(__name__)
+import pandas as pd
+import typer
+from dotenv import load_dotenv
+from joblib import load
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 
+app = typer.Typer()
 
-class WeakLabelingPipeline:
-    def __init__(self,
-                 model_filename,
-                 transformer_model_name='all-MiniLM-L6-v2',
-                 column_to_embed='content'):
-        root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-        models_folder = os.getenv('MODELS_DIR')
-        if not models_folder:
-            raise ValueError("MODELS_DIR environment variable not set")
 
-        models_folder_path = os.path.join(root_dir, models_folder)
+def load_model(model_filename):
+    """Load the model from the specified path."""
+    models_folder = os.getenv('MODELS_DIR')
+    if not models_folder:
+        logger.error("MODELS_DIR environment variable not set.")
+        raise ValueError("MODELS_DIR environment variable not set.")
 
-        self.model_path = os.path.join(models_folder_path, model_filename)
+    model_path = os.path.join(models_folder, model_filename)
+    if not os.path.exists(model_path):
+        logger.error(f"No such file or directory: '{model_path}'")
+        raise FileNotFoundError(f"No such file or directory: '{model_path}'")
 
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError(f"No such file or directory: '{self.model_path}'")
+    return load(model_path)
 
-        self.model = joblib.load(self.model_path)
-        self.transformer = SentenceTransformer(transformer_model_name)
-        self.column_to_embed = column_to_embed
 
-        self.data_folder_path = os.path.join(root_dir, 'data')
-        if not os.path.exists(self.data_folder_path):
-            os.makedirs(self.data_folder_path)
+def load_transformer():
+    """Load the SentenceTransformer model based on environment settings."""
+    transformer_model_name = os.getenv('ST_EMBEDDING_MODEL_NAME')
+    if not transformer_model_name:
+        logger.error("ST_EMBEDDING_MODEL_NAME environment variable not set.")
+        raise ValueError("ST_EMBEDDING_MODEL_NAME environment variable not set.")
 
-    def predict(self):
-        embeddings = self.transformer.encode(self.data[self.column_to_embed].tolist(), show_progress_bar=True)
+    return SentenceTransformer(transformer_model_name)
 
-        self.data['label'] = self.model.predict(embeddings)
-        return self.data
 
-    def save_results(self, output_filename):
-        output_path = os.path.join(self.data_folder_path, output_filename)
-        print(f"Saving results to: {output_path}")
-        self.data.to_parquet(output_path, index=False)
+def ensure_data_directory():
+    """Ensure the data directory exists or create it if it does not."""
+    data_folder_path = os.getenv('DATA_DIR')
+    weak_labelled_path = os.path.join(data_folder_path, 'weak_labelled')
+    if not os.path.exists(weak_labelled_path):
+        os.makedirs(weak_labelled_path)
+    return weak_labelled_path
 
-    def run(self, df, output_filename=None):
-        self.data = df
-        self.data.rename(columns={'label': 'ground_truth'}, inplace=True)
-        self.predict()
-        if output_filename:
-            self.save_results(output_filename)
-        return self.data
+
+def predict(df, model, transformer, column_to_embed='content'):
+    """Generate predictions using the provided model and transformer."""
+    embeddings = transformer.encode(df[column_to_embed].tolist(), show_progress_bar=True)
+    df['label'] = model.predict(embeddings)
+    return df
+
+
+def save_results(df, output_filename):
+    """Save the results to a specified file in the data directory."""
+    data_folder_path = ensure_data_directory()
+    output_path = os.path.join(data_folder_path, output_filename)
+    logger.info(f"Saving results to: {output_path}")
+    df.to_parquet(output_path, index=False)
+
+
+@app.command()
+def run_pipeline(model_filename: str, unlabelled_parquet_file_path: str, verbose: bool = False):
+    """Main command to execute the pipeline."""
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+
+    logger.debug("Starting pipeline execution...")
+    if not os.path.exists(unlabelled_parquet_file_path):
+        logger.error(f"No such file or directory: '{unlabelled_parquet_file_path}'")
+        raise FileNotFoundError(f"No such file or directory: '{unlabelled_parquet_file_path}'")
+
+    df = pd.read_parquet(unlabelled_parquet_file_path)
+    model = load_model(model_filename)
+    transformer = load_transformer()
+
+    results = predict(df, model, transformer)
+
+    model_base_name = os.path.splitext(os.path.basename(model_filename))[0]
+    output_filename = f"{model_base_name}_weaklabels.parquet"
+    save_results(results, output_filename)
+
+    logger.info("Pipeline finished successfully!")
+
+
+if __name__ == '__main__':
+    app()
