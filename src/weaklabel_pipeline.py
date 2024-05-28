@@ -53,6 +53,7 @@ def predict(df, model, transformer, column_to_embed='content'):
     """Generate predictions using the provided model and transformer."""
     embeddings = transformer.encode(df[column_to_embed].tolist(), show_progress_bar=True)
     df['label'] = model.predict(embeddings)
+    df['embedding_vec'] = embeddings.tolist()
     return df
 
 

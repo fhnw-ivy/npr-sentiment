@@ -88,6 +88,9 @@ The test dataset would not be available in a real-world scenario, but we will us
 ```{python}
 from src.data_loader import load_datasets
 
+# print current path of data dir
+print(DATA_DIR)
+
 partitions_dir = os.path.join(DATA_DIR, 'partitions')
 labelled_dev, unlabelled_dev, val_set = load_datasets(partitions_dir)
 train_df = labelled_dev
