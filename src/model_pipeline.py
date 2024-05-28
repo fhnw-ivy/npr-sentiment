@@ -43,11 +43,12 @@ class ModelMode(str, Enum):
 def get_default_training_params():
     return {
         "learning_rate": 2e-5,
-        "num_epochs": 10,
-        "batch_size": 32,
         "optim": "adamw_torch",
         "warmup_steps": 500,
-        "weight_decay": 0.01,
+
+        "num_epochs": 20,
+        "batch_size": 32,
+        "weight_decay": 0.0,
 
         "logging_strategy": "epoch",
         "logging_first_step": True,
