@@ -39,6 +39,10 @@ load_dotenv()
 
 DATA_DIR = os.getenv('DATA_DIR', 'data')
 MODELS_DIR = os.getenv('MODELS_DIR', 'models')
+
+DATA_DIR = os.path.abspath(os.path.join(parent_dir, DATA_DIR))
+MODELS_DIR = os.path.abspath(os.path.join(parent_dir, MODELS_DIR))
+
 assert DATA_DIR is not None
 assert MODELS_DIR is not None
 
@@ -87,6 +91,9 @@ The test dataset would not be available in a real-world scenario, but we will us
 
 ```{python}
 from src.data_loader import load_datasets
+
+# print current path of data dir
+print(DATA_DIR)
 
 partitions_dir = os.path.join(DATA_DIR, 'partitions')
 labelled_dev, unlabelled_dev, val_set = load_datasets(partitions_dir)
