@@ -186,7 +186,7 @@ def train_and_eval(model,
     if wandb_group is not None:
         run_name = f"{wandb_group}_run_{wandb.util.generate_id()}_samples_{len(train_ds_tokenized)}"
 
-    with wandb.init(group=wandb_group, name=run_name):
+    with wandb.init(group=wandb_group, name=run_name, dir=output_dir):
         wandb.config.update(training_args)
         wandb.config.update({
             "model": {
@@ -199,7 +199,6 @@ def train_and_eval(model,
                 "num_validation_samples": len(val_ds_tokenized),
                 "use_weak_labels": training_params["use_weak_labels"]
             }
-
         })
 
         trainer = Trainer(
