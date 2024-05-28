@@ -18,7 +18,9 @@ sys.path.append(parent_dir)
 from src.data_loader import load_datasets
 from src.weaklabel_pipeline import WeakLabelingPipeline
 
-DATA_DIR = os.getenv('DATA_DIR')
+DATA_DIR = os.path.join(parent_dir, os.getenv('DATA_DIR'))
+
+print(DATA_DIR)
 ```
 
 This notebook contains an example showing the usage of `WeakLabelingPipeline`.
