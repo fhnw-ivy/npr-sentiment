@@ -6,7 +6,10 @@ import time
 
 import numpy as np
 import torch
+from datasets import Dataset
 from dotenv import load_dotenv
+from sklearn.metrics import accuracy_score, f1_score
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
 def setup_logging():
@@ -33,9 +36,54 @@ def get_torch_device():
     return torch.device("cpu")
 
 
-def get_run_output_dir(output_dir_root: str, training_mode: str, include_nested_splits: bool, use_weak_labels: bool = False):
+def set_seed(seed: int = os.getenv("SEED", 1337)):
+    seed = int(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+def tokenize_and_prepare_dataset(dataset: Dataset, tokenizer):
+    return dataset.map(lambda batch: tokenizer(batch['content'],
+                                               padding="max_length",
+                                               truncation=True,
+                                               max_length=512),
+                       batched=True)
+
+
+def create_tokenizer(model_name: str):
+    return AutoTokenizer.from_pretrained(model_name)
+
+
+def create_model(model_name: str, freeze_base: bool):
+    model = AutoModelForSequenceClassification.from_pretrained(model_name,
+                                                               num_labels=2,
+                                                               output_hidden_states=False).to(get_torch_device())
+    if freeze_base:
+        for name, param in model.named_parameters():
+            if 'classifier' not in name:
+                param.requires_grad = False
+    return model
+
+
+def compute_metrics(pred):
+    # TODO: Fix this function to work with hidden states output
+    preds, labels = pred.predictions.argmax(-1), pred.label_ids
+
+    accuracy = accuracy_score(labels, preds)
+    f1_macro = f1_score(labels, preds, average='macro')
+    f1_weighted = f1_score(labels, preds, average='weighted')
+    return {"accuracy": accuracy, "f1_macro": f1_macro, "f1_weighted": f1_weighted}
+
+
+def get_run_output_dir(output_dir_root: str,
+                       mode: str,
+                       include_nested_splits: bool,
+                       use_weak_labels: bool = False):
     return os.path.join(output_dir_root,
-                        f"{time.strftime('%Y-%m-%d_%H-%M-%S')}_training_mode={training_mode},nested_splits={include_nested_splits},weak_labels={use_weak_labels}")
+                        f"{time.strftime('%Y-%m-%d_%H-%M-%S')}_mode={mode},nested_splits={include_nested_splits},weak_labels={use_weak_labels}")
 
 
 def save_eval_results(eval_results, output_dir):

@@ -20,7 +20,7 @@ It takes a fraction of the original dataset and splits it into a train and eval 
 To begin training models, execute the following command:
 
 ```bash
-python src/model_training.py "transfer" --nested-splits
+python src/model_pipeline.py transfer --nested-splits
 ```
 
 ### Configuration Options
