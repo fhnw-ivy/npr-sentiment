@@ -238,6 +238,35 @@ print_evaluation(y_test, best_knn.predict(X_test),
                  'KNeighbors Weak Labeling (Test Set)')
 ```
 
+## Approach 1.1 KNeighbors Weak Labeling on PCA reduced embeddings
+It is known that K-Nearest Neighbor models struggle with high-dimensional data. We will use PCA to reduce the dimensionality of the sentence embeddings and then train a KNeighbors classifier on the reduced embeddings.
+
+```{python}
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=8)
+X_train_pca = pca.fit_transform(X_train)
+
+grid_search.fit(X_train_pca, y_train)
+best_knn_pca = grid_search.best_estimator_
+```
+
+```{python}
+
+print_evaluation(y_val, best_knn_pca.predict(pca.transform(X_val)), 
+                 'KNeighbors Weak Labeling (PCA Reduced) (Validation Set)')
+
+print_evaluation(y_test, best_knn_pca.predict(pca.transform(X_test)),
+                    'KNeighbors Weak Labeling (PCA Reduced) (Test Set)')
+
+```
+
+### Saving the PCA KNN
+```{python}
+with open(f'{MODELS_DIR}/weak_labelling/pca_knn_weak_labeling.pkl', 'wb') as f:
+    pickle.dump(grid_search, f)
+```
+
 ## Approach 2: Logistic Regression
 
 ```{python}
