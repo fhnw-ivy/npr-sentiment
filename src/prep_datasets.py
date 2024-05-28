@@ -81,9 +81,9 @@ def parse_fractions_string(fractions_str):
 
 @app.command()
 def prepare_dataset(
-        dev_set_fraction: float = typer.Option(1/600,
+        dev_set_fraction: float = typer.Option(1 / 600,
                                                help="Fraction of the full dataset to be used as the development set"),
-        val_set_fraction: float = typer.Option(1/600,
+        val_set_fraction: float = typer.Option(1 / 600,
                                                help="Fraction of the test dataset to be used as the validation set"),
         labelled_fraction: float = typer.Option(1 / 6, help="Fraction of the development set that should be labelled"),
         output_dir: str = typer.Option(os.getenv("DATA_DIR"), help="Directory to save the parquet files. Defaults to "
@@ -111,6 +111,9 @@ def prepare_dataset(
                  f"Unlabelled set size: {len(unlabelled_df)} (fraction: {1 - labelled_fraction}),"
                  f"Validation set size: {len(val_df)} (fraction: {val_set_fraction})")
 
+    unlabelled_df.rename(columns={'label': 'ground_truth'}, inplace=True)
+
+    output_dir = os.path.join(output_dir, "partitions")
     shutil.rmtree(output_dir, ignore_errors=True)
     os.makedirs(output_dir, exist_ok=True)
     save_data(labelled_df, unlabelled_df, val_df, output_dir)

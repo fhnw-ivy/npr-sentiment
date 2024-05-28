@@ -47,6 +47,7 @@ def set_seed(seed: int = SEED):
 def load_and_prep_datasets(data_dir: str,
                            nested_splits: bool,
                            weak_label_path: str = None):
+    data_dir = os.path.join(data_dir, "partitions")
     labelled_dev_df, unlabelled_dev_df, validation_set_df = load_datasets(data_dir)
 
     if weak_label_path:
