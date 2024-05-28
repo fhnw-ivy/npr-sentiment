@@ -14,3 +14,4 @@ wandb~=0.16.6
 rootutils~=1.0.7
 
 jupyter
+accelerate~=0.30.1
