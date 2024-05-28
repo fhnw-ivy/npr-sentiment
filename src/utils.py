@@ -57,10 +57,16 @@ def create_tokenizer(model_name: str):
     return AutoTokenizer.from_pretrained(model_name)
 
 
-def create_model(model_name: str, freeze_base: bool):
-    model = AutoModelForSequenceClassification.from_pretrained(model_name,
-                                                               num_labels=2,
-                                                               output_hidden_states=False).to(get_torch_device())
+def create_model(model_name: str, freeze_base: bool, ckpt_path: str = None):
+    if not os.path.exists(ckpt_path):
+        raise FileNotFoundError(f"Checkpoint file not found at {ckpt_path}")
+
+    if ckpt_path:
+        model = AutoModelForSequenceClassification.from_pretrained(ckpt_path).to(get_torch_device())
+    else:
+        model = AutoModelForSequenceClassification.from_pretrained(model_name,
+                                                                   num_labels=2,
+                                                                   output_hidden_states=False).to(get_torch_device())
     if freeze_base:
         for name, param in model.named_parameters():
             if 'classifier' not in name:

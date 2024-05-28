@@ -230,6 +230,9 @@ def train_and_eval(model,
 @app.command()
 def model_pipeline(
         mode: ModelMode,
+
+        ckpt_path: str = None,
+
         nested_splits: bool = False,
         weak_label_path: str = None,
 
@@ -244,6 +247,11 @@ def model_pipeline(
 
     logger.info(f"Training mode: {mode}")
     freeze_base = True if ModelMode.transfer == mode else False
+
+    if ckpt_path is not None:
+        if nested_splits:
+            raise ValueError("Cannot use checkpoint with nested splits")
+        logger.info(f"Using checkpoint from {ckpt_path}")
 
     training_params = get_default_training_params()
     training_params["batch_size"] = batch_size
@@ -284,7 +292,7 @@ def model_pipeline(
         save_training_size_performance_plot(eval_results, output_root_dir)
     else:
         output_root_dir = get_run_output_dir(OUTPUT_ROOT_DIR, mode, nested_splits, use_weak_labels)
-        model = create_model(HF_MODEL_NAME, freeze_base)
+        model = create_model(HF_MODEL_NAME, freeze_base, ckpt_path)
 
         train_ds_tokenized = tokenize_and_prepare_dataset(datasets["train"], tokenizer)
         eval_results = train_and_eval(model,
