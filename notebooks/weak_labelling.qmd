@@ -39,6 +39,10 @@ load_dotenv()
 
 DATA_DIR = os.getenv('DATA_DIR', 'data')
 MODELS_DIR = os.getenv('MODELS_DIR', 'models')
+
+DATA_DIR = os.path.abspath(os.path.join(parent_dir, DATA_DIR))
+MODELS_DIR = os.path.abspath(os.path.join(parent_dir, MODELS_DIR))
+
 assert DATA_DIR is not None
 assert MODELS_DIR is not None
 
