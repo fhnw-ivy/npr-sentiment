@@ -9,7 +9,6 @@ load_dotenv()
 
 DEFAULT_SCHEMA = px.Schema(
         actual_label_column_name="label",
-        prediction_label_column_name="predicted_label",
         embedding_feature_column_names={
                 "text_embedding": px.EmbeddingColumnNames(
                 vector_column_name="content_vector", 
@@ -21,12 +20,12 @@ DEFAULT_SCHEMA = px.Schema(
 def create_dataset(name: str,
                    dataframe: pd.DataFrame, 
                    embedding_vectors: list[np.array], 
-                   predicted_labels: np.array,
+                   predicted_labels: np.array = None,
                    content: np.array = None):
         if content is not None:
                 dataframe['content'] = content
         dataframe['content_vector'] = embedding_vectors
-        dataframe['predicted_label'] = predicted_labels
+        if predicted_labels: dataframe['predicted_label'] = predicted_labels
 
         return px.Dataset(dataframe=dataframe, schema=DEFAULT_SCHEMA, name=name)
 
