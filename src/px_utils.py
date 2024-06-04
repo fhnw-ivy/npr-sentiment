@@ -12,7 +12,8 @@ DEFAULT_SCHEMA = px.Schema(
         prediction_label_column_name="predicted_label",
         embedding_feature_column_names={
                 "text_embedding": px.EmbeddingColumnNames(
-                vector_column_name="content_vector", raw_data_column_name="content",
+                vector_column_name="content_vector", 
+                raw_data_column_name="content",
                 ),
         }
 )
@@ -20,11 +21,14 @@ DEFAULT_SCHEMA = px.Schema(
 def create_dataset(name: str,
                    dataframe: pd.DataFrame, 
                    embedding_vectors: list[np.array], 
-                   predicted_labels: np.array):
-    dataframe['content_vector'] = embedding_vectors
-    dataframe['predicted_label'] = predicted_labels
+                   predicted_labels: np.array,
+                   content: np.array = None):
+        if content is not None:
+                dataframe['content'] = content
+        dataframe['content_vector'] = embedding_vectors
+        dataframe['predicted_label'] = predicted_labels
 
-    return px.Dataset(dataframe=dataframe, schema=DEFAULT_SCHEMA, name=name)
+        return px.Dataset(dataframe=dataframe, schema=DEFAULT_SCHEMA, name=name)
 
 def launch_px(primary_dataset: px.Dataset, reference_dataset: px.Dataset):
     return px.launch_app(primary=primary_dataset, 
