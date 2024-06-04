@@ -6,6 +6,7 @@ import typer
 from dotenv import load_dotenv
 from joblib import load
 from sentence_transformers import SentenceTransformer
+from torch import nn
 
 load_dotenv()
 
@@ -15,29 +16,35 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def load_model(model_filename):
+def load_models(model_filename, transformers: list[str]):
     """Load the model from the specified path."""
     models_folder = os.getenv('MODELS_DIR')
     if not models_folder:
         logger.error("MODELS_DIR environment variable not set.")
         raise ValueError("MODELS_DIR environment variable not set.")
 
-    model_path = os.path.join(models_folder, model_filename)
-    if not os.path.exists(model_path):
-        logger.error(f"No such file or directory: '{model_path}'")
-        raise FileNotFoundError(f"No such file or directory: '{model_path}'")
+    model_paths = [os.path.join(models_folder, 'weak_labelling', transformer_name, model_filename) for transformer_name in transformers]
+    for model_path in model_paths:
+        if not os.path.exists(model_path):
+            logger.error(f"No such file or directory: '{model_path}'")
+            raise FileNotFoundError(f"No such file or directory: '{model_path}'")
+    
+    models_dict = {transformer_name: load(model_path) for transformer_name, model_path in zip(transformers, model_paths)}
 
-    return load(model_path)
+    return models_dict
 
 
-def load_transformer():
-    """Load the SentenceTransformer model based on environment settings."""
-    transformer_model_name = os.getenv('ST_EMBEDDING_MODEL_NAME')
-    if not transformer_model_name:
-        logger.error("ST_EMBEDDING_MODEL_NAME environment variable not set.")
-        raise ValueError("ST_EMBEDDING_MODEL_NAME environment variable not set.")
+def load_transformers():
+    """Load the SentenceTransformer models based on environment settings."""
+    # check if WL_EMBEDDING_MODELS is set
+    transformer_names = os.getenv('WL_EMBEDDING_MODELS').split(",")
+    if not transformer_names:
+        logger.error("WL_EMBEDDING_MODELS environment variable not set.")
+        raise ValueError("WL_EMBEDDING_MODELS environment variable not set.")
 
-    return SentenceTransformer(transformer_model_name)
+    transformers = {name: SentenceTransformer(name) for name in transformer_names}
+
+    return transformers
 
 
 def ensure_data_directory():
@@ -49,11 +56,16 @@ def ensure_data_directory():
     return weak_labelled_path
 
 
-def predict(df, model, transformer, column_to_embed='content'):
-    """Generate predictions using the provided model and transformer."""
-    embeddings = transformer.encode(df[column_to_embed].tolist(), show_progress_bar=True)
-    df['label'] = model.predict(embeddings)
-    df['embedding_vec'] = embeddings.tolist()
+def predict(df, models: dict, transformers: dict[str, SentenceTransformer], column_to_embed='content'):
+    """Generate predictions using the provided models and transformers."""
+    embeddings_dict = {name: transformer.encode(df[column_to_embed].tolist()) for name, transformer in transformers.items()}
+    
+    for name, model in models.items():
+        embeddings = embeddings_dict[name]
+        
+        df[f'{name}_label'] = model.predict(embeddings)
+        df[f'{name}_embedding_vec'] = embeddings.tolist()
+        
     return df
 
 
@@ -77,10 +89,13 @@ def run_pipeline(model_filename: str, unlabelled_parquet_file_path: str, verbose
         raise FileNotFoundError(f"No such file or directory: '{unlabelled_parquet_file_path}'")
 
     df = pd.read_parquet(unlabelled_parquet_file_path)
-    model = load_model(model_filename)
-    transformer = load_transformer()
-
-    results = predict(df, model, transformer)
+   
+    transformers = load_transformers()
+    logger.info(f'Loaded transformer(s): {[name for name, _ in transformers.items()]}')
+    
+    models = load_models(model_filename, list(transformers.keys()))
+    
+    results = predict(df, models, transformers)
 
     model_base_name = os.path.splitext(os.path.basename(model_filename))[0]
     output_filename = f"{model_base_name}_weaklabels.parquet"
