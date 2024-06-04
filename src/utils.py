@@ -58,10 +58,10 @@ def create_tokenizer(model_name: str):
 
 
 def create_model(model_name: str, freeze_base: bool, ckpt_path: str = None):
-    if not os.path.exists(ckpt_path):
-        raise FileNotFoundError(f"Checkpoint file not found at {ckpt_path}")
-
     if ckpt_path:
+        if os.path.exists(ckpt_path):
+            raise FileNotFoundError(f"Checkpoint file not found at {ckpt_path}")
+
         model = AutoModelForSequenceClassification.from_pretrained(ckpt_path).to(get_torch_device())
     else:
         model = AutoModelForSequenceClassification.from_pretrained(model_name,
