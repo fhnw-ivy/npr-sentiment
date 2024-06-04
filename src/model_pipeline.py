@@ -63,6 +63,10 @@ def get_default_training_params():
     }
 
 
+def shuffle_df(df, seed=SEED):
+    return df.sample(frac=1, random_state=seed).reset_index(drop=True)
+
+
 def load_and_prep_datasets(data_dir: str,
                            nested_splits: bool,
                            weak_label_path: str = None):
@@ -72,10 +76,10 @@ def load_and_prep_datasets(data_dir: str,
     if weak_label_path:
         weak_labels_df = pd.read_parquet(weak_label_path)
         train_df = pd.concat([labelled_dev_df, weak_labels_df])
-        train_df = train_df.sample(frac=1, random_state=SEED).reset_index(drop=True)
     else:
         train_df = labelled_dev_df
 
+    train_df, validation_set_df = shuffle_df(train_df), shuffle_df(validation_set_df)
     train_ds = Dataset.from_pandas(train_df)
     val_ds = Dataset.from_pandas(validation_set_df)
 
@@ -87,7 +91,13 @@ def load_and_prep_datasets(data_dir: str,
     logger.info(f"Loaded datasets from {data_dir}: {len(train_ds)} training samples, {len(val_ds)} validation samples")
 
     if nested_splits:
-        nested_splits_dfs = create_hierarchically_nested_subsets(train_df, NESTED_SPLIT_RATIOS, SEED)
+        if weak_label_path:
+            nested_splits_dfs = create_hierarchically_nested_subsets(weak_labels_df, NESTED_SPLIT_RATIOS, SEED)
+            for key, df in nested_splits_dfs.items():  # Add labelled dev set to each nested split of weak labels
+                nested_splits_dfs[key] = shuffle_df(pd.concat([labelled_dev_df, df]))
+        else:
+            nested_splits_dfs = create_hierarchically_nested_subsets(labelled_dev_df, NESTED_SPLIT_RATIOS, SEED)
+
         nested_splits_dss = {key: Dataset.from_pandas(df) for key, df in nested_splits_dfs.items()}
         datasets["nested_splits"] = nested_splits_dss
         logger.info(f"Created nested splits: {list(nested_splits_dss.keys())}")
