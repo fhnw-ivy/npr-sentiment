@@ -8,13 +8,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DEFAULT_SCHEMA = px.Schema(
-    actual_label_column_name="label",
-    embedding_feature_column_names={
-        "text_embedding": px.EmbeddingColumnNames(
-            vector_column_name="content_vector",
-            raw_data_column_name="content",
-        ),
-    }
+        actual_label_column_name="label",
+        embedding_feature_column_names={
+                "text_embedding": px.EmbeddingColumnNames(
+                vector_column_name="embedding", 
+                raw_data_column_name="content",
+                ),
+        }
 )
 
 
