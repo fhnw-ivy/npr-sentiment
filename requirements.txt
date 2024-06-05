@@ -17,3 +17,7 @@ plotly
 
 jupyter
 accelerate~=0.30.1
+
+arize==7.11.1
+arize-phoenix==3.16.1
+arize-phoenix-evals==0.3.1
