@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from datasets import Dataset
 from dotenv import load_dotenv
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
@@ -75,13 +75,16 @@ def create_model(model_name: str, freeze_base: bool, ckpt_path: str = None):
 
 
 def compute_metrics(pred):
-    # TODO: Fix this function to work with hidden states output
     preds, labels = pred.predictions.argmax(-1), pred.label_ids
 
     accuracy = accuracy_score(labels, preds)
     f1_macro = f1_score(labels, preds, average='macro')
     f1_weighted = f1_score(labels, preds, average='weighted')
-    return {"accuracy": accuracy, "f1_macro": f1_macro, "f1_weighted": f1_weighted}
+    precision = precision_score(labels, preds, average='macro')
+    recall = recall_score(labels, preds, average='macro')
+    auroc = roc_auc_score(labels, preds)
+
+    return {"accuracy": accuracy, "f1_macro": f1_macro, "f1_weighted": f1_weighted, "precision": precision, "recall": recall, "auroc": auroc}
 
 
 def get_run_output_dir(output_dir_root: str,
