@@ -79,6 +79,9 @@ def parse_fractions_string(fractions_str):
     return [float(frac) for frac in fractions_str.split(",")]
 
 
+# len(dataset) = 3'600'000
+# 1 / 1440 * len(dataset) = 2500
+# 1 / 10 * 1 / 1440 * len(dataset) = 250
 @app.command()
 def prepare_dataset(
         dev_set_fraction: float = typer.Option(1 / 1440,
