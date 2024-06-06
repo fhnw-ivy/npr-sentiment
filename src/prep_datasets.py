@@ -81,11 +81,11 @@ def parse_fractions_string(fractions_str):
 
 @app.command()
 def prepare_dataset(
-        dev_set_fraction: float = typer.Option(1 / 600,
+        dev_set_fraction: float = typer.Option(1 / 1440,
                                                help="Fraction of the full dataset to be used as the development set"),
-        val_set_fraction: float = typer.Option(1 / 600,
+        val_set_fraction: float = typer.Option(1 / 1440,
                                                help="Fraction of the test dataset to be used as the validation set"),
-        labelled_fraction: float = typer.Option(1 / 6, help="Fraction of the development set that should be labelled"),
+        labelled_fraction: float = typer.Option(1 / 10, help="Fraction of the development set that should be labelled"),
         output_dir: str = typer.Option(os.getenv("DATA_DIR"), help="Directory to save the parquet files. Defaults to "
                                                                    "the DATA_DIR environment variable."),
         verbose: bool = typer.Option(False, help="Enable verbose logging")
