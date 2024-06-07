@@ -21,7 +21,6 @@ emphasizing the development and evaluation of models using both supervised and s
         * [Running with Docker](#running-with-docker)
     * [Scripts](#scripts)
         * [Preparation of Datasets](#preparation-of-datasets)
-        * [Preparation of Datasets](#preparation-of-datasets-1)
         * [Model Training and Fine-Tuning](#model-training-and-fine-tuning)
         * [Weak Labeling Application](#weak-labeling-application)
     * [Notebooks](#notebooks)
@@ -150,30 +149,6 @@ training, validation, and development sets. The already partitioned data is avai
 directory. The fractions are in relation to
 the [Amazon Polarity dataset](https://huggingface.co/datasets/fancyzhx/amazon_polarity) (1.8M training samples, 200k
 testing samples). Example usage:
-
-```bash
-python src/prep_datasets.py \
-  --dev-set-fraction 0.07 \
-  --val-set-fraction 0.03 \
-  --labelled-fraction 0.1 \
-  --output-dir /path/to/output \
-  --verbose
-```
-
-**Parameters:**
-
-- **Dev Set Fraction**: Specifies the fraction of the full dataset to be used as the development set.
-- **Val Set Fraction**: Specifies the fraction of the test dataset to be used as the validation set.
-- **Labelled Fraction**: Specifies the fraction of the development set that should be labelled.
-- **Output Dir**: Directory where the parquet files will be saved. Defaults to the `DATA_DIR` environment variable if
-  not specified.
-- **Verbose**: Enables verbose logging to provide detailed output during execution.
-
-### Preparation of Datasets
-
-For setting up the datasets necessary for training and evaluation, the `prepare_dataset` command in `prep_datasets.py`
-is designed to partition the dataset into development, validation, and labelled sections based on predefined fractions
-of the total dataset size. Example usage:
 
 ```bash
 python src/prep_datasets.py prepare_dataset \
