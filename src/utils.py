@@ -75,30 +75,23 @@ def create_model(model_name: str, freeze_base: bool, ckpt_path: str = None):
     return model
 
 
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, confusion_matrix
+
 def compute_metrics(pred):
     labels = pred.label_ids
     preds = pred.predictions.argmax(-1)
+    probs = pred.predictions[:, 1]  # Probability of the positive class
     
-    class_report = classification_report(labels, preds, output_dict=True)
+    accuracy = accuracy_score(labels, preds)
+    f1_macro = f1_score(labels, preds, average='macro')
+    f1_weighted = f1_score(labels, preds, average='weighted')
+    precision_macro = precision_score(labels, preds, average='macro')
+    precision_weighted = precision_score(labels, preds, average='weighted')
+    recall_macro = recall_score(labels, preds, average='macro')
+    recall_weighted = recall_score(labels, preds, average='weighted')
+    roc_auc = roc_auc_score(labels, probs)
     
-    # Extract metrics from the classification report
-    accuracy = class_report['accuracy']
-    f1_macro = class_report['macro avg']['f1-score']
-    f1_weighted = class_report['weighted avg']['f1-score']
-    precision_macro = class_report['macro avg']['precision']
-    precision_weighted = class_report['weighted avg']['precision']
-    recall_macro = class_report['macro avg']['recall']
-    recall_weighted = class_report['weighted avg']['recall']
-    
-    # Compute confusion matrix
-    conf_matrix = confusion_matrix(labels, preds)
-    
-    # Compute TP, FP, TN, FN counts for each class
-    num_classes = len(conf_matrix)
-    tp = [conf_matrix[i][i] for i in range(num_classes)]
-    fp = [conf_matrix[:, i].sum() - conf_matrix[i][i] for i in range(num_classes)]
-    fn = [conf_matrix[i, :].sum() - conf_matrix[i][i] for i in range(num_classes)]
-    tn = [conf_matrix.sum() - (tp[i] + fp[i] + fn[i]) for i in range(num_classes)]
+    cm = confusion_matrix(labels, preds)
     
     return {
         'accuracy': accuracy,
@@ -108,12 +101,12 @@ def compute_metrics(pred):
         'precision_weighted': precision_weighted,
         'recall_macro': recall_macro,
         'recall_weighted': recall_weighted,
-        'tp': tp,
-        'fp': fp,
-        'tn': tn,
-        'fn': fn
+        'roc_auc': roc_auc,
+        'confusion_matrix': cm.tolist(),
+        'true_labels': labels.tolist(),
+        'pred_probs': probs.tolist()
     }
-
+    
     
 def get_run_output_dir(output_dir_root: str,
                        mode: str,
