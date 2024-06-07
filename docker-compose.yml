@@ -5,6 +5,7 @@ services:
     build: .
     ports:
       - "8888:8888" # JupyterLab
+      - "6006:6006" # Arize Phoenix
     volumes:
       - .:/usr/src/app
     environment:

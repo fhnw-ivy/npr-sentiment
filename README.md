@@ -134,9 +134,8 @@ To run the project in a Docker container, follow these steps:
       docker exec -it npr-sentiment-analysis jupyter notebook --ip
       ```
 
-
 - Ensure all paths and environment variables are set correctly before executing scripts.
-- Use absolute paths for Docker commands to avoid path resolution issues.
+    - When running Docker, make sure all paths in the `.env` are relative
 - If GPU support is required, ensure that
   you [passthrough the GPU to the Docker container](https://stackoverflow.com/a/58432877).
 
