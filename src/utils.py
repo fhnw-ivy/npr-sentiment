@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from datasets import Dataset
 from dotenv import load_dotenv
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix, classification_report
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, confusion_matrix
 
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
@@ -75,7 +75,6 @@ def create_model(model_name: str, freeze_base: bool, ckpt_path: str = None):
     return model
 
 
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, confusion_matrix
 
 def compute_metrics(pred):
     labels = pred.label_ids
