@@ -8,8 +8,7 @@ import numpy as np
 import torch
 from datasets import Dataset
 from dotenv import load_dotenv
-from sklearn.metrics import (accuracy_score, f1_score, precision_score, recall_score, roc_auc_score, roc_curve,
-                             confusion_matrix, precision_recall_curve, average_precision_score, classification_report)
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix, classification_report
 
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
@@ -76,40 +75,46 @@ def create_model(model_name: str, freeze_base: bool, ckpt_path: str = None):
     return model
 
 
-
 def compute_metrics(pred):
-    preds, labels = pred.predictions.argmax(-1), pred.label_ids
-    accuracy = accuracy_score(labels, preds)
-    f1_macro = f1_score(labels, preds, average='macro')
-    f1_weighted = f1_score(labels, preds, average='weighted')
-    precision = precision_score(labels, preds, average='macro')
-    recall = recall_score(labels, preds, average='macro')
-    auroc = roc_auc_score(labels, preds)
-    auroc_curve = roc_curve(labels, preds)
-
+    labels = pred.label_ids
+    preds = pred.predictions.argmax(-1)
+    
+    class_report = classification_report(labels, preds, output_dict=True)
+    
+    # Extract metrics from the classification report
+    accuracy = class_report['accuracy']
+    f1_macro = class_report['macro avg']['f1-score']
+    f1_weighted = class_report['weighted avg']['f1-score']
+    precision_macro = class_report['macro avg']['precision']
+    precision_weighted = class_report['weighted avg']['precision']
+    recall_macro = class_report['macro avg']['recall']
+    recall_weighted = class_report['weighted avg']['recall']
+    
+    # Compute confusion matrix
     conf_matrix = confusion_matrix(labels, preds)
-
-    precision_curve, recall_curve, _ = precision_recall_curve(labels, pred.predictions[:, 1])
-
-    avg_precision = average_precision_score(labels, pred.predictions[:, 1])
-
-    class_report = classification_report(labels, preds)
-
+    
+    # Compute TP, FP, TN, FN counts for each class
+    num_classes = len(conf_matrix)
+    tp = [conf_matrix[i][i] for i in range(num_classes)]
+    fp = [conf_matrix[:, i].sum() - conf_matrix[i][i] for i in range(num_classes)]
+    fn = [conf_matrix[i, :].sum() - conf_matrix[i][i] for i in range(num_classes)]
+    tn = [conf_matrix.sum() - (tp[i] + fp[i] + fn[i]) for i in range(num_classes)]
+    
     return {
-        "accuracy": accuracy,
-        "f1_macro": f1_macro,
-        "f1_weighted": f1_weighted,
-        "precision": precision,
-        "recall": recall,
-        "auroc": auroc,
-        "auroc_curve": auroc_curve,
-        "confusion_matrix": conf_matrix,
-        "precision_curve": precision_curve,
-        "recall_curve": recall_curve,
-        "avg_precision": avg_precision,
-        "classification_report": class_report
+        'accuracy': accuracy,
+        'f1_macro': f1_macro,
+        'f1_weighted': f1_weighted,
+        'precision_macro': precision_macro,
+        'precision_weighted': precision_weighted,
+        'recall_macro': recall_macro,
+        'recall_weighted': recall_weighted,
+        'tp': tp,
+        'fp': fp,
+        'tn': tn,
+        'fn': fn
     }
 
+    
 def get_run_output_dir(output_dir_root: str,
                        mode: str,
                        include_nested_splits: bool,

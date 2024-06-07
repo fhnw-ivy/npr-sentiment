@@ -111,19 +111,19 @@ def save_training_size_performance_plot(data, output_dir):
     metrics = {key: [] for key in data[next(iter(data))].keys() if key.startswith("eval_")}
     sorted_metrics = {metric: [data[size][metric] for size in dataset_sizes] for metric in metrics}
 
-    for metric, values in sorted_metrics.items():
-        plt.figure(figsize=(8, 6))
-        plt.plot([float(size) for size in dataset_sizes], values, marker='o',
-                 linestyle='-')
-        plt.title(metric.replace('eval_', '').replace('_', ' ').title())
-        plt.xlabel('Training Dataset Size')
-        plt.ylabel(metric.replace('eval_', '').replace('_', ' ').title())
-        plt.grid(True)
+    # for metric, values in sorted_metrics.items():
+    #     plt.figure(figsize=(8, 6))
+    #     plt.plot([float(size) for size in dataset_sizes], values, marker='o',
+    #              linestyle='-')
+    #     plt.title(metric.replace('eval_', '').replace('_', ' ').title())
+    #     plt.xlabel('Training Dataset Size')
+    #     plt.ylabel(metric.replace('eval_', '').replace('_', ' ').title())
+    #     plt.grid(True)
 
-        filename = f"{metric}.png"
-        filepath = os.path.join(output_dir, filename)
-        plt.savefig(filepath)
-        plt.close()
+    #     filename = f"{metric}.png"
+    #     filepath = os.path.join(output_dir, filename)
+    #     plt.savefig(filepath)
+    #     plt.close()
 
 
 def train_nested_split(mode,
