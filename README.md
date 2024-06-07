@@ -39,6 +39,7 @@ emphasizing the development and evaluation of models using both supervised and s
     - embeddings/
         - mini_lm                    # Embeddings using sentence-transformers/all-MiniLM-L6-v2
         - mpnet_base                 # Embeddings using sentence-transformers/all-mpnet-base-v2
+    - weak_labelled/                 # Weakly labelled data for training
         
 - models/
     - weak_labeling/                  # Models and scripts for weak labeling
