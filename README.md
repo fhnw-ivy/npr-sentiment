@@ -17,13 +17,14 @@ emphasizing the development and evaluation of models using both supervised and s
     * [Project Overview](#project-overview)
     * [Pre-requisites](#pre-requisites)
     * [Setup](#setup)
-        * [Running Locally with a Python Environment](#running-locally-with-a-python-environment)
+        * [Running Locally with a Python Environment (Recommended)](#running-locally-with-a-python-environment-recommended)
         * [Running with Docker](#running-with-docker)
     * [Scripts](#scripts)
         * [Preparation of Datasets](#preparation-of-datasets)
         * [Model Training and Fine-Tuning](#model-training-and-fine-tuning)
         * [Weak Labeling Application](#weak-labeling-application)
     * [Notebooks](#notebooks)
+    * [Model Weights from Experiments](#model-weights-from-experiments)
 
 <!-- TOC -->
 
@@ -77,7 +78,7 @@ emphasizing the development and evaluation of models using both supervised and s
 
 ## Setup
 
-### Running Locally with a Python Environment
+### Running Locally with a Python Environment (Recommended)
 
 To run the project locally using Python:
 
@@ -109,10 +110,12 @@ To run the project in a Docker container, follow these steps:
    docker build -t npr-mc2-sentiment-analysis .
    ```
 
-    - If you want to pull the prebuilt `x86` image from GitHub Container Registry, use:
+    - If you want to pull the prebuilt `x86` image from GitHub Container Registry, instead use:
       ```bash
       docker pull ghcr.io/fhnw-ivy/npr-sentiment:main
       ```
+      Then you can replace `npr-mc2-sentiment-analysis` with `ghcr.io/fhnw-ivy/npr-sentiment:main` for the image tag in
+      the `docker-compose.yml` or `docker run` commands.
 
 3. **Run Docker Compose** (defaults to building the image if not already built):
    ```bash
@@ -129,13 +132,12 @@ To run the project in a Docker container, follow these steps:
       docker exec -it npr-sentiment-analysis python src/model_pipeline.py transfer --nested-splits
       ```
 
-    - Or access the Jupyter notebook server running in the container (defaulting to http://localhost:8888):
-      ```bash
-      docker exec -it npr-sentiment-analysis jupyter notebook --ip
-      ```
+    - Or access the Jupyter notebook server running in the container (defaulting to http://localhost:8888)
 
 - Ensure all paths and environment variables are set correctly before executing scripts.
     - When running Docker, make sure all paths in the `.env` are relative
+- The Arize Phoenix visualisation do not work within the Docker container due to networking restrictions.
+    - To use the visualisation, run the project locally with a Python environment.
 - If GPU support is required, ensure that
   you [passthrough the GPU to the Docker container](https://stackoverflow.com/a/58432877).
 
@@ -146,7 +148,7 @@ To run the project in a Docker container, follow these steps:
 To prepare your dataset, use the `prep_datasets.py` script. This script organizes the data into
 training, validation, and development sets. The already partitioned data is available in the `data/partitions`
 directory. The fractions are in relation to
-the [Amazon Polarity dataset](https://huggingface.co/datasets/fancyzhx/amazon_polarity) (1.8M training samples, 200k
+the [Amazon Polarity dataset](https://huggingface.co/datasets/fancyzhx/amazon_polarity) (3.6M training samples, 400k
 testing samples). Example usage:
 
 ```bash
@@ -246,3 +248,9 @@ evaluation processes:
 - `main.ipynb` – Main notebook for EDA, data partitioning, training, and evaluation.
 
 The recommended path is to start with the main notebook and then proceed to the related notebooks for further insights.
+
+## Model Weights from Experiments
+
+The safetensors of each model experiment can be downloaded
+from [OneDrive](https://fhnw365-my.sharepoint.com/:f:/g/personal/noah_leuenberger_students_fhnw_ch/Eq9uOhn2iE5PpuqPXzBJqVEBWEMW6QnRbIFM5E05mxf5Hg?e=DDeRd5)
+with a FHNW account. The folders are accordingly named and contain the experiment configurations.
