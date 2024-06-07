@@ -4,54 +4,271 @@
 
 ---
 
-## Dataset Preparation
+This repository contains the implementation for the second mini-challenge of the Natural Language Processing course @
+University of Applied Sciences Northwestern Switzerland (FHNW). This challenge focuses on Sentiment Analysis,
+emphasizing the development and evaluation of models using both supervised and semi-supervised techniques.
 
-The `src/prep_datasets.py` script is used to prepare the dataset for training and weak labeling. You can run the script
-with the following command:
+## Table of Contents
 
-```bash
-python src/prep_datasets.py --verbose
+<!-- TOC -->
+
+* [NPR MC2: Sentiment Analysis](#npr-mc2-sentiment-analysis)
+    * [Table of Contents](#table-of-contents)
+    * [Project Overview](#project-overview)
+    * [Pre-requisites](#pre-requisites)
+    * [Setup](#setup)
+        * [Running Locally with a Python Environment](#running-locally-with-a-python-environment)
+        * [Running with Docker](#running-with-docker)
+    * [Scripts](#scripts)
+        * [Preparation of Datasets](#preparation-of-datasets)
+        * [Preparation of Datasets](#preparation-of-datasets-1)
+        * [Model Training and Fine-Tuning](#model-training-and-fine-tuning)
+        * [Weak Labeling Application](#weak-labeling-application)
+    * [Notebooks](#notebooks)
+
+<!-- TOC -->
+
+## Project Overview
+
+```
+- data/
+    - partitions/
+        - labelled_dev.parquet       # Subset treated as labelled for training
+        - unlabelled_dev.parquet     # Subset treated as unlabelled for weak labeling
+        - validation_set.parquet     # Used for model validation
+    - embeddings/
+        - mini_lm                    # Embeddings using sentence-transformers/all-MiniLM-L6-v2
+        - mpnet_base                 # Embeddings using sentence-transformers/all-mpnet-base-v2
+        
+- models/
+    - weak_labeling/                  # Models and scripts for weak labeling
+    - semi-supervised/                # Results for semi-supervised models (safetensors from OneDrive)
+    - supervised/                     # Results for supervised models (safetensors from OneDrive)
+    - eval/                           # Evaluation results for baseline models
+    
+- notebooks/
+    - weak_labeling.ipynb             # Discusses, optimizes, and compares weak labeling approaches
+    - embedding_analysis.ipynb        # Analyzes embeddings and their dimensional reductions
+    - main.ipynb                      # Main notebook for EDA, data partitioning, training, and evaluation
+    - exports/                        # Exported HTML versions of the notebooks
+    
+- results/                            # Directory for model training outputs
+
+- src/
+    - prep_datasets.py                # Script for dataset preparation and partitioning
+    - model_pipeline.py               # Manages model fine-tuning, evaluation, and inference
+    - weaklabel_pipeline.py           # Applies weak labels to unlabelled data
+    - data_loader.py                  # Functions for loading data
+    - utils.py                        # General utility functions for scripts
+    - px_utils.py                     # Utility functions for embedding visualisation with Arize Phoenix
+
+- default.env                         # Default environment variables setup
+- docker-compose.yml                  # Docker compose configuration for project containerization
+- Dockerfile                          # Dockerfile to build the project's Docker container
+- README.md                           # Project overview and setup instructions
+- requirements.txt                    # Lists Python dependencies for the project
+- train.sh                            # Shell script to run model fine-tuning across configurations
+- USE-OF-AI.md                        # Document describing the use of AI within the project
 ```
 
-It takes a fraction of the original dataset and splits it into a train and eval set as well as a unlabelled set.
+## Pre-requisites
 
-## Training
+- Python 3.11
+- Docker (if you want to run the project in a container)
 
-To begin training models, execute the following command:
+## Setup
+
+### Running Locally with a Python Environment
+
+To run the project locally using Python:
+
+1. **Ensure Python 3.11 is installed**: Check your Python version by running `python --version` or `python3 --version`
+   in your terminal.
+
+2. **Clone the Repository**: Clone the repository to your local machine.
+
+3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Environment Setup**: Set up the necessary environment variables.
+   ```bash
+   cp default.env .env  # and modify .env as needed according to descriptions in the file
+   ```
+
+And you're all set! You should now be able to run the project scripts.
+
+### Running with Docker
+
+To run the project in a Docker container, follow these steps:
+
+1. **Ensure Docker is installed**: Check Docker installation by running `docker --version`.
+
+2. **Build the Docker Image**:
+   ```bash
+   docker build -t npr-mc2-sentiment-analysis .
+   ```
+
+    - If you want to pull the prebuilt `x86` image from GitHub Container Registry, use:
+      ```bash
+      docker pull ghcr.io/fhnw-ivy/npr-sentiment:main
+      ```
+
+3. **Run Docker Compose** (defaults to building the image if not already built):
+   ```bash
+   docker-compose up
+   ```
+
+4. **Using the Docker Container**: To interact with the project within the Docker container, use:
+   ```bash
+   docker run -it --rm --name npr-sentiment-analysis npr-mc2-sentiment-analysis
+   ```
+
+    - You can execute Python scripts directly within the container:
+      ```bash
+      docker exec -it npr-sentiment-analysis python src/model_pipeline.py transfer --nested-splits
+      ```
+
+    - Or access the Jupyter notebook server running in the container (defaulting to http://localhost:8888):
+      ```bash
+      docker exec -it npr-sentiment-analysis jupyter notebook --ip
+      ```
+
+
+- Ensure all paths and environment variables are set correctly before executing scripts.
+- Use absolute paths for Docker commands to avoid path resolution issues.
+- If GPU support is required, ensure that
+  you [passthrough the GPU to the Docker container](https://stackoverflow.com/a/58432877).
+
+## Scripts
+
+### Preparation of Datasets
+
+To prepare your dataset, use the `prep_datasets.py` script. This script organizes the data into
+training, validation, and development sets. The already partitioned data is available in the `data/partitions`
+directory. The fractions are in relation to
+the [Amazon Polarity dataset](https://huggingface.co/datasets/fancyzhx/amazon_polarity) (1.8M training samples, 200k
+testing samples). Example usage:
 
 ```bash
-python src/model_pipeline.py transfer --nested-splits
+python src/prep_datasets.py \
+  --dev-set-fraction 0.07 \
+  --val-set-fraction 0.03 \
+  --labelled-fraction 0.1 \
+  --output-dir /path/to/output \
+  --verbose
 ```
 
-### Configuration Options
+**Parameters:**
 
-You can customize the training process by using various command-line arguments. Here are the available options:
+- **Dev Set Fraction**: Specifies the fraction of the full dataset to be used as the development set.
+- **Val Set Fraction**: Specifies the fraction of the test dataset to be used as the validation set.
+- **Labelled Fraction**: Specifies the fraction of the development set that should be labelled.
+- **Output Dir**: Directory where the parquet files will be saved. Defaults to the `DATA_DIR` environment variable if
+  not specified.
+- **Verbose**: Enables verbose logging to provide detailed output during execution.
 
-- **Mode**:
-    - `transfer` – Starts training with transfer learning.
-    - `finetune` – Starts fine-tuning the model.
+### Preparation of Datasets
 
-- **Nested Splits**:
-    - `--nested-splits` – Enables nested splits for the train set to improve model robustness.
-
-- **Learning Rate**:
-    - `--lr X` – Sets the learning rate to `X`, where `X` is a float.
-
-- **Epochs**:
-    - `--num_epochs X` – Specifies the number of epochs for training, where `X` is an integer.
-
-- **Batch Size**:
-    - `--batch_size X` – Defines the batch size for training, where `X` is an integer.
-
-## Weak Labeling
-
-To apply weak labeling to the dataset, you need to have a trained model. If you haven't trained a model yet, please
-refer to weak labeling notebook in the `notebooks` directory.
-
-Run the following command to apply weak labeling to the dataset:
+For setting up the datasets necessary for training and evaluation, the `prepare_dataset` command in `prep_datasets.py`
+is designed to partition the dataset into development, validation, and labelled sections based on predefined fractions
+of the total dataset size. Example usage:
 
 ```bash
-python src/weaklabel_pipeline.py [...]/models/log_reg_weak_labeling.pkl [...]/data/partitions/unlabelled_dev.parquet --verbose
+python src/prep_datasets.py prepare_dataset \
+  --dev-set-fraction 0.007 \
+  --val-set-fraction 0.003 \
+  --labelled-fraction 0.01 \
+  --output-dir /path/to/output \
+  --verbose
 ```
 
-Make sure to replace `[...]` with the correct absolute path to the model and the unlabelled dataset.
+**Parameters:**
+
+- **Dev Set Fraction**: The fraction of the full dataset to be used as the development set.
+- **Val Set Fraction**: The fraction of the test dataset to be used as the validation set.
+- **Labelled Fraction**: The fraction of the development set that should be labelled.
+- **Output Dir**: Specifies the directory to save the parquet files, defaulting to the `DATA_DIR` environment variable.
+- **Verbose**: Enables verbose logging for detailed output during the script execution.
+
+**Default Settings Explanation:**
+
+- Given a full dataset size of approximately 3,600,000 records:
+    - **Development Set**: By default, a small fraction of the dataset (approximately 1/1440, or about 2500 records) is
+      designated as the development set.
+    - **Validation Set**: Similarly, the validation set uses another 1/1440 of the test dataset, also amounting to about
+      2500 records.
+    - **Labelled Data**: Within the development set, a default of 10% (about 250 records) is labelled, allowing for a
+      feasible amount of data to be manually annotated or reviewed for initial model training.
+- The output directory is flexible but defaults to the `DATA_DIR` environment variable, which needs to be set prior to
+  execution to ensure smooth operation.
+- The verbose flag is false by default, aiming to keep the console output minimal unless detailed feedback is necessary
+  for troubleshooting or monitoring purposes.
+
+These settings ensure that the dataset is manageable and optimized for initial phases of model training and evaluation,
+balancing between computational efficiency and adequate data representation for model performance.
+
+### Model Training and Fine-Tuning
+
+To train or fine-tune models, execute the `model_pipeline.py` script with the required parameters:
+
+```bash
+python src/model_pipeline.py \
+  --mode transfer \
+  --ckpt-path /path/to/ckpt \
+  --nested-splits \
+  --weak-label-path /path/to/weak/label \
+  --batch-size 32 \
+  --learning-rate 2e-5 \
+  --num-epochs 10 \
+  --warmup-steps 500 \
+  --weight-decay 0.01 \
+  --optim adamw_torch
+```
+
+**Options:**
+
+- **Mode**: Set the operation mode (`transfer`, `finetune` or `eval`).
+- **Ckpt Path**: Path to a checkpoint file for model initialization or resumption. If not specified, the script will
+  start from scratch.
+- **Nested Splits**: Enables nested splits and makes run for each split. If not specified, the script will run on the
+  full dataset.
+- **Weak Label Path**: Path to the weak label data file. Only required for weak label training, if not specified, the
+  script will run in full supervised mode.
+- **Batch Size**: Batch size for training.
+- **Learning Rate**: Learning rate for the optimizer.
+- **Num Epochs**: Number of epochs for the training process.
+- **Warmup Steps**: Number of warmup steps before the main optimization phase.
+- **Weight Decay**: Regularization parameter.
+- **Optim**: Choice of optimizer, default is `adamw_torch`.
+
+### Weak Labeling Application
+
+For applying weak labels using the `weaklabel_pipeline.py` script, specify the model and data paths
+correctly:
+
+```bash
+python src/weaklabel_pipeline.py \
+  --model-filename /path/to/model.pkl \
+  --unlabelled-parquet-file-path /path/to/unlabelled/data.parquet \
+  --verbose
+```
+
+**Parameters:**
+
+- **Model Filename**: Path to the file containing the trained model. The model should be a `scikit-learn` model saved
+  in the expected embedding dimension.
+- **Unlabelled Parquet File Path**: Path to the unlabelled data file in Parquet format which should be weakly labelled.
+- **Verbose**: Enable verbose output for detailed processing logs.
+
+## Notebooks
+
+The `notebooks` directory contains Jupyter notebooks that provide detailed insights into the project's development and
+evaluation processes:
+
+- `weak_labeling.ipynb` – Discusses, optimizes, and compares weak labeling approaches.
+- `embedding_analysis.ipynb` – Analyzes embeddings and their dimensional reductions.
+- `main.ipynb` – Main notebook for EDA, data partitioning, training, and evaluation.
+
+The recommended path is to start with the main notebook and then proceed to the related notebooks for further insights.
