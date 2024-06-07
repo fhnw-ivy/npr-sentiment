@@ -7510,18 +7510,58 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fa9c9165">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d8be86aa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Weak-Labeling-for-Semi-Supervised-Learning">Weak Labeling for Semi-Supervised Learning<a class="anchor-link" href="#Weak-Labeling-for-Semi-Supervised-Learning">¶</a></h1>
+<h1 id="Weak-Labeling-for-Semi-Supervised-Learning"><a id="toc1_"></a><a href="#toc0_">Weak Labeling for Semi-Supervised Learning</a><a class="anchor-link" href="#Weak-Labeling-for-Semi-Supervised-Learning">¶</a></h1>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=be2a871a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0e9ef403">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Table of contents</strong><a id="toc0_"></a></p>
+<ul>
+<li><a href="#toc1_">Weak Labeling for Semi-Supervised Learning</a><ul>
+<li><a href="#toc1_1_">Setup</a></li>
+<li><a href="#toc1_2_">Load Datasets</a></li>
+<li><a href="#toc1_3_">Sentence Embeddings</a></li>
+<li><a href="#toc1_4_">Evaluation Function</a></li>
+<li><a href="#toc1_5_">Comparison between Embedding Models</a></li>
+<li><a href="#toc1_6_">Approach 1: Logistic Regression</a></li>
+<li><a href="#toc1_7_">Approach 2: KNeighbors Weak Labeling</a></li>
+<li><a href="#toc1_8_">Approach 2.1 KNeighbors Weak Labeling on PCA reduced embeddings</a></li>
+<li><a href="#toc1_9_">Approach 3: Random Forest</a></li>
+<li><a href="#toc1_10_">Approach 4: Neural Network</a></li>
+<li><a href="#toc1_11_">Approach 5: Support Vector Machine</a><ul>
+<li><a href="#toc1_11_1_">Comparison of All Approaches</a></li>
+<li><a href="#toc1_11_2_">Summary</a></li>
+</ul>
+</li>
+<li><a href="#toc1_12_">Save Best Models</a></li>
+</ul>
+</li>
+</ul>
+<!-- vscode-jupyter-toc-config
+	numbering=false
+	anchor=true
+	flat=false
+	minLevel=1
+	maxLevel=6
+	/vscode-jupyter-toc-config -->
+<!-- THIS CELL WILL BE REPLACED ON TOC UPDATE. DO NOT WRITE YOUR TEXT IN THIS CELL -->
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c8fef04b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7539,7 +7579,7 @@ a.anchor-link {
 <p>We will use the <code>sentence-transformers</code> library to generate sentence embeddings and the <code>scikit-learn</code> library to train the weak labeling models.</p>
 <p>The weak labeling models will be trained on the labeled development set and will then be used to predict the labels of the unlabeled development set. We will then evaluate the performance of the weak labeling models on the validation set, which is also labeled.</p>
 <p>Finally, we will save the best weak labeling models so that they can be used in the semi-supervised learning phase of the weak labeling together with the provided pipeline for inference.</p>
-<h2 id="Setup">Setup<a class="anchor-link" href="#Setup">¶</a></h2>
+<h2 id="Setup"><a id="toc1_1_"></a><a href="#toc0_">Setup</a><a class="anchor-link" href="#Setup">¶</a></h2>
 </div>
 </div>
 </div>
@@ -7627,7 +7667,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3d1f1761">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c299fbea">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7649,13 +7689,13 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=277bff21">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=54c6b561">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Load-Datasets">Load Datasets<a class="anchor-link" href="#Load-Datasets">¶</a></h2><p>We will load the labeled development set, the unlabeled development set, and the validation set.</p>
+<h2 id="Load-Datasets"><a id="toc1_2_"></a><a href="#toc0_">Load Datasets</a><a class="anchor-link" href="#Load-Datasets">¶</a></h2><p>We will load the labeled development set, the unlabeled development set, and the validation set.</p>
 <p>Here a short overview of the datasets:</p>
 <ul>
 <li>Train Dataset: Labeled development set</li>
@@ -7666,7 +7706,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=973b1e3b">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=e11fa9ca">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7692,13 +7732,13 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=75f61f02">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=63896e0d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Sentence-Embeddings">Sentence Embeddings<a class="anchor-link" href="#Sentence-Embeddings">¶</a></h2><p>We will use the <code>sentence-transformers</code> library to generate sentence embeddings for the text data. The embedding models we will discuss are:</p>
+<h2 id="Sentence-Embeddings"><a id="toc1_3_"></a><a href="#toc0_">Sentence Embeddings</a><a class="anchor-link" href="#Sentence-Embeddings">¶</a></h2><p>We will use the <code>sentence-transformers</code> library to generate sentence embeddings for the text data. The embedding models we will discuss are:</p>
 <ol>
 <li><code>all-MiniLM-L6-v2</code>: Fast and efficient model</li>
 <li><code>all-mpnet-base-v2</code>: High-quality model</li>
@@ -7822,7 +7862,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e5b796d34c73ee95">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=dff306f0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7833,18 +7873,18 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a8b1df01b77b4bb1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=347a3140">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Evaluation-Function">Evaluation Function<a class="anchor-link" href="#Evaluation-Function">¶</a></h2><p>We will use the following function to evaluate the performance of the weak labeling models on the validation and test sets. It will print the classification report and confusion matrix for the predictions made by the weak labeling models.</p>
+<h2 id="Evaluation-Function"><a id="toc1_4_"></a><a href="#toc0_">Evaluation Function</a><a class="anchor-link" href="#Evaluation-Function">¶</a></h2><p>We will use the following function to evaluate the performance of the weak labeling models on the validation and test sets. It will print the classification report and confusion matrix for the predictions made by the weak labeling models.</p>
 <p>The test set would not be available in a real-world scenario, but we will use it to get an idea of how well the weak labeling models perform on unseen data and thus make assumptions about the performance later on the downstream task. This obviously introduces some bias for the decision-making process, but we will use it for the sake of the demonstration.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=11bddb1af135a2ba">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4067e256">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7870,13 +7910,13 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3262dad9a749aa04">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a8c27a9f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Comparison-between-Embedding-Models">Comparison between Embedding Models<a class="anchor-link" href="#Comparison-between-Embedding-Models">¶</a></h2><p>In the process of comparing the performance of weak labeling approaches using different embedding models, we found that the choice of embedding significantly impacts model performance. For this reason, we compared the performance of the Logistic Regression model trained with embeddings generated by the two different models, all-MiniLM-L6-v2 and all-mpnet-base-v2.</p>
+<h2 id="Comparison-between-Embedding-Models"><a id="toc1_5_"></a><a href="#toc0_">Comparison between Embedding Models</a><a class="anchor-link" href="#Comparison-between-Embedding-Models">¶</a></h2><p>In the process of comparing the performance of weak labeling approaches using different embedding models, we found that the choice of embedding significantly impacts model performance. For this reason, we compared the performance of the Logistic Regression model trained with embeddings generated by the two different models, all-MiniLM-L6-v2 and all-mpnet-base-v2.</p>
 <p><strong>Baseline Model: Logistic Regression</strong>
 We used a simple Logistic Regression model for this baseline comparison to assess the impact of different embeddings on model performance. The Logistic Regression model was not tuned for hyperparameters in this initial phase.</p>
 </div>
@@ -7922,7 +7962,7 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8f4c6bd0c28e07e5">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=f09acf3f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7949,13 +7989,13 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4c609bbc500a0184">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=28b811c5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Approach-1:-Logistic-Regression">Approach 1: Logistic Regression<a class="anchor-link" href="#Approach-1:-Logistic-Regression">¶</a></h2><p>Logistic Regression is selected as the first approach due to its simplicity and interpretability, making it an ideal baseline for weak labeling tasks. It is a well-understood algorithm that provides clear insights into the relationship between features and the target variable. Despite its simplicity, Logistic Regression is effective for binary classification tasks, such as the one in this challenge. It serves as a solid starting point to evaluate the performance of weak labeling before exploring more complex models.</p>
+<h2 id="Approach-1:-Logistic-Regression"><a id="toc1_6_"></a><a href="#toc0_">Approach 1: Logistic Regression</a><a class="anchor-link" href="#Approach-1:-Logistic-Regression">¶</a></h2><p>Logistic Regression is selected as the first approach due to its simplicity and interpretability, making it an ideal baseline for weak labeling tasks. It is a well-understood algorithm that provides clear insights into the relationship between features and the target variable. Despite its simplicity, Logistic Regression is effective for binary classification tasks, such as the one in this challenge. It serves as a solid starting point to evaluate the performance of weak labeling before exploring more complex models.</p>
 <p>We utilized grid search to find the best hyperparameters for the Logistic Regression model. The grid search was configured with 5-fold cross-validation and included eight different configurations, totaling 40 fits.</p>
 </div>
 </div>
@@ -7996,7 +8036,7 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=de9eb62a9f670a74">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=38eb12ca">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8011,13 +8051,13 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1f0a01bb">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=aa719c1b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Approach-2:-KNeighbors-Weak-Labeling">Approach 2: KNeighbors Weak Labeling<a class="anchor-link" href="#Approach-2:-KNeighbors-Weak-Labeling">¶</a></h2><p>The KNeighbors classifier is chosen for its intuitive approach to classification by considering the proximity of data points in the feature space. This method is particularly suitable for weak labeling as it leverages the notion of clustering, which is analogous to finding the nearest neighbors for a given data point. By using Grid Search to tune hyperparameters, we aim to identify the optimal configuration that can enhance the performance of the weak labeling model.</p>
+<h2 id="Approach-2:-KNeighbors-Weak-Labeling"><a id="toc1_7_"></a><a href="#toc0_">Approach 2: KNeighbors Weak Labeling</a><a class="anchor-link" href="#Approach-2:-KNeighbors-Weak-Labeling">¶</a></h2><p>The KNeighbors classifier is chosen for its intuitive approach to classification by considering the proximity of data points in the feature space. This method is particularly suitable for weak labeling as it leverages the notion of clustering, which is analogous to finding the nearest neighbors for a given data point. By using Grid Search to tune hyperparameters, we aim to identify the optimal configuration that can enhance the performance of the weak labeling model.</p>
 </div>
 </div>
 </div>
@@ -8059,7 +8099,7 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3a60324c1c637efd">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f96d2a3e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8076,13 +8116,13 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0d6483e2">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4233c18b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Approach-2.1-KNeighbors-Weak-Labeling-on-PCA-reduced-embeddings">Approach 2.1 KNeighbors Weak Labeling on PCA reduced embeddings<a class="anchor-link" href="#Approach-2.1-KNeighbors-Weak-Labeling-on-PCA-reduced-embeddings">¶</a></h2><p>To address the limitations of the KNeighbors classifier in high-dimensional spaces, we incorporate Principal Component Analysis (PCA) to reduce the dimensionality of the sentence embeddings. This step is justified by the fact that KNeighbors can struggle with high-dimensional data, leading to the curse of dimensionality. PCA helps in capturing the most significant features, thereby improving the efficiency and performance of the KNeighbors classifier in the weak labeling task.</p>
+<h2 id="Approach-2.1-KNeighbors-Weak-Labeling-on-PCA-reduced-embeddings"><a id="toc1_8_"></a><a href="#toc0_">Approach 2.1 KNeighbors Weak Labeling on PCA reduced embeddings</a><a class="anchor-link" href="#Approach-2.1-KNeighbors-Weak-Labeling-on-PCA-reduced-embeddings">¶</a></h2><p>To address the limitations of the KNeighbors classifier in high-dimensional spaces, we incorporate Principal Component Analysis (PCA) to reduce the dimensionality of the sentence embeddings. This step is justified by the fact that KNeighbors can struggle with high-dimensional data, leading to the curse of dimensionality. PCA helps in capturing the most significant features, thereby improving the efficiency and performance of the KNeighbors classifier in the weak labeling task.</p>
 </div>
 </div>
 </div>
@@ -8114,7 +8154,7 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4420b3fcafcea0e">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6ebb2e17">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8131,13 +8171,13 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d7f81b49">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fb6e6125">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Approach-3:-Random-Forest">Approach 3: Random Forest<a class="anchor-link" href="#Approach-3:-Random-Forest">¶</a></h2><p>Random Forest is selected for its robustness and ability to handle complex data through ensemble learning. This approach justifies its use by combining multiple decision trees to improve classification accuracy and prevent overfitting. Random Forests are particularly effective in capturing nonlinear relationships and interactions between features, making them a powerful choice.</p>
+<h2 id="Approach-3:-Random-Forest"><a id="toc1_9_"></a><a href="#toc0_">Approach 3: Random Forest</a><a class="anchor-link" href="#Approach-3:-Random-Forest">¶</a></h2><p>Random Forest is selected for its robustness and ability to handle complex data through ensemble learning. This approach justifies its use by combining multiple decision trees to improve classification accuracy and prevent overfitting. Random Forests are particularly effective in capturing nonlinear relationships and interactions between features, making them a powerful choice.</p>
 </div>
 </div>
 </div>
@@ -8177,7 +8217,7 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=877215d877ebf043">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=db39d083">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8194,13 +8234,13 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7d10beed">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=651e2f59">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Approach-4:-Neural-Network">Approach 4: Neural Network<a class="anchor-link" href="#Approach-4:-Neural-Network">¶</a></h2><p>Neural Networks are chosen for their capability to model complex patterns and relationships in the data. This approach is justified by the neural network's ability to learn from high-dimensional sentence embeddings and possibly capture intricate feature representations.</p>
+<h2 id="Approach-4:-Neural-Network"><a id="toc1_10_"></a><a href="#toc0_">Approach 4: Neural Network</a><a class="anchor-link" href="#Approach-4:-Neural-Network">¶</a></h2><p>Neural Networks are chosen for their capability to model complex patterns and relationships in the data. This approach is justified by the neural network's ability to learn from high-dimensional sentence embeddings and possibly capture intricate feature representations.</p>
 </div>
 </div>
 </div>
@@ -8246,7 +8286,7 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=67478e7cbbc38f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3f2dadfc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8263,13 +8303,13 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=885aa1cf">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=36bbae2a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Approach-5:-Support-Vector-Machine">Approach 5: Support Vector Machine<a class="anchor-link" href="#Approach-5:-Support-Vector-Machine">¶</a></h2><p>Support Vector Machines (SVM) are included for their effectiveness in high-dimensional spaces and robustness against overfitting. SVMs are particularly suitable for weak labeling as they can find the optimal hyperplane that maximizes the margin between different classes. This approach is justified by the SVM's strong theoretical foundation and its ability to handle both linear and nonlinear classification tasks through different kernel functions, ensuring versatility.</p>
+<h2 id="Approach-5:-Support-Vector-Machine"><a id="toc1_11_"></a><a href="#toc0_">Approach 5: Support Vector Machine</a><a class="anchor-link" href="#Approach-5:-Support-Vector-Machine">¶</a></h2><p>Support Vector Machines (SVM) are included for their effectiveness in high-dimensional spaces and robustness against overfitting. SVMs are particularly suitable for weak labeling as they can find the optimal hyperplane that maximizes the margin between different classes. This approach is justified by the SVM's strong theoretical foundation and its ability to handle both linear and nonlinear classification tasks through different kernel functions, ensuring versatility.</p>
 </div>
 </div>
 </div>
@@ -8310,7 +8350,7 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2ee94076c1521019">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=16769a04">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8328,13 +8368,13 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d0fe2c2366c7c2eb">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f059b05d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Comparison-of-All-Approaches">Comparison of All Approaches<a class="anchor-link" href="#Comparison-of-All-Approaches">¶</a></h3><ul>
+<h3 id="Comparison-of-All-Approaches"><a id="toc1_11_1_"></a><a href="#toc0_">Comparison of All Approaches</a><a class="anchor-link" href="#Comparison-of-All-Approaches">¶</a></h3><ul>
 <li><p><strong>Logistic Regression</strong></p>
 <ul>
 <li><strong>Performance</strong>: Achieves balanced metrics with an accuracy of 0.82-0.83, demonstrating robustness in binary classification.</li>
@@ -8366,7 +8406,7 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </ul>
 </li>
 </ul>
-<h3 id="Summary">Summary<a class="anchor-link" href="#Summary">¶</a></h3><ul>
+<h3 id="Summary"><a id="toc1_11_2_"></a><a href="#toc0_">Summary</a><a class="anchor-link" href="#Summary">¶</a></h3><ul>
 <li><strong>Top Performers</strong>: SVM and Logistic Regression stand out for their high accuracy and strong generalization across both validation and test sets.</li>
 <li><strong>Robust Choices</strong>: Random Forest and Neural Network also show impressive performance, particularly in handling complex datasets and learning detailed data patterns.</li>
 <li><strong>Special Considerations</strong>: KNeighbors demonstrates good performance. When using PCA for dimensionality reduction, there is a slight decline in performance, indicating that while PCA can simplify the feature space, it may also omit critical features necessary for optimal class distinction.</li>
@@ -8375,13 +8415,13 @@ We used a simple Logistic Regression model for this baseline comparison to asses
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d754f632">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=78d7250a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Save-Best-Models">Save Best Models<a class="anchor-link" href="#Save-Best-Models">¶</a></h2><p>For the semi-supervised learning phase of the weak labeling, we will save the best weak labeling models. The saved models can be used for inference in the <code>weak_labelling.py</code> script. For an example usage of the weak labeling pipeline, refer to the <code>README.md</code> file.</p>
+<h2 id="Save-Best-Models"><a id="toc1_12_"></a><a href="#toc0_">Save Best Models</a><a class="anchor-link" href="#Save-Best-Models">¶</a></h2><p>For the semi-supervised learning phase of the weak labeling, we will save the best weak labeling models. The saved models can be used for inference in the <code>weak_labelling.py</code> script. For an example usage of the weak labeling pipeline, refer to the <code>README.md</code> file.</p>
 <p>Although we will not all the models in the final pipeline, we will save them for reference and potential future use and completeness.</p>
 </div>
 </div>
